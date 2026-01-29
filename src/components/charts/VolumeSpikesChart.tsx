@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  type Formatter,
 } from "recharts";
 import { PriceRow } from "@/types";
 
@@ -52,7 +51,7 @@ export function VolumeSpikesChart({ selectedTickers, allData }: Props) {
     volume: s.volume,
   }));
 
-  const volumeFormatter: Formatter<number, string> = (value, name, props) => {
+  const volumeFormatter = (value: number, name: string, props: { payload?: { volume?: number } }) => {
     const vol = props?.payload?.volume;
     if (vol == null) {
       return [value != null ? `${value.toFixed(2)}× avg` : "0", "Ratio"];
