@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --bloomberg-black: #0d0d0d;
+  --bloomberg-dark: #1a1a1a;
+  --bloomberg-panel: #242424;
+  --bloomberg-border: #333333;
+  --bloomberg-green: #00ff88;
+  --bloomberg-red: #ff4444;
+  --bloomberg-amber: #ffaa00;
+  --bloomberg-blue: #00aaff;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bloomberg-black);
+  color: #e0e0e0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bloomberg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bloomberg-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
