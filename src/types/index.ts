@@ -11,7 +11,9 @@ export interface StockData {
 export interface IndicatorData {
   date: string;
   value: number;
-  [key: string]: string | number | undefined;
+  /** Optional flag for volume spikes (> 2x average); used by VolumeSpikesChart */
+  isSpike?: boolean;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface MACDData {
