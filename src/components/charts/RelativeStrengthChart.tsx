@@ -14,17 +14,11 @@ import { PriceRow } from "@/types";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
 }
 
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-export function RelativeStrengthChart({ selectedTickers, allData }: Props) {
-  const spyRows = getTickerData(allData, "SPY");
+export function RelativeStrengthChart({ selectedTickers, tickerData }: Props) {
+  const spyRows = tickerData["SPY"] ?? [];
   const tickers = selectedTickers.filter((t) => t !== "SPY").slice(0, 5);
   if (spyRows.length === 0 || tickers.length === 0) {
     return (
@@ -42,7 +36,7 @@ export function RelativeStrengthChart({ selectedTickers, allData }: Props) {
   const series: Record<string, number[]> = {};
 
   tickers.forEach((ticker) => {
-    const rows = getTickerData(allData, ticker);
+    const rows = tickerData[ticker] ?? [];
     const ratios: { date: string; value: number }[] = [];
     rows.forEach((r) => {
       const spy = dataByDate.get(r.date);
@@ -54,7 +48,7 @@ export function RelativeStrengthChart({ selectedTickers, allData }: Props) {
   });
 
   const dates = tickers.length > 0
-    ? getTickerData(allData, tickers[0])
+    ? (tickerData[tickers[0]] ?? [])
         .filter((r) => dataByDate.has(r.date))
         .map((r) => r.date)
     : [];
@@ -62,8 +56,8 @@ export function RelativeStrengthChart({ selectedTickers, allData }: Props) {
   const data = dates.map((date, i) => {
     const obj: Record<string, string | number> = { date };
     tickers.forEach((t) => {
-      const rows = getTickerData(allData, t);
-      const r = rows.find((x) => x.date === date);
+      const tickerRows = tickerData[t] ?? [];
+      const r = tickerRows.find((x) => x.date === date);
       const spy = dataByDate.get(date);
       if (r && spy && spy > 0) obj[t] = (r.close / spy) * 100;
     });

@@ -5,13 +5,7 @@ import { useMemo } from "react";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
-}
-
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  tickerData: Record<string, PriceRow[]>;
 }
 
 function computeReturns(rows: PriceRow[]): number[] {
@@ -39,11 +33,11 @@ function correlation(a: number[], b: number[]): number {
   return den === 0 ? 0 : num / den;
 }
 
-export function CorrelationChart({ selectedTickers, allData }: Props) {
+export function CorrelationChart({ selectedTickers, tickerData }: Props) {
   const { matrix, tickers } = useMemo(() => {
     const t = selectedTickers.slice(0, 8);
     const returns = t.map((ticker) => {
-      const rows = getTickerData(allData, ticker);
+      const rows = tickerData[ticker] ?? [];
       return computeReturns(rows);
     });
     const matrix: number[][] = [];
@@ -55,7 +49,7 @@ export function CorrelationChart({ selectedTickers, allData }: Props) {
       matrix.push(row);
     }
     return { matrix, tickers: t };
-  }, [selectedTickers, allData]);
+  }, [selectedTickers, tickerData]);
 
   if (tickers.length === 0) return null;
 

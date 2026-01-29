@@ -15,13 +15,7 @@ import { PriceRow } from "@/types";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
-}
-
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  tickerData: Record<string, PriceRow[]>;
 }
 
 function computeCumulativeReturn(rows: PriceRow[]): number[] {
@@ -33,7 +27,7 @@ function computeCumulativeReturn(rows: PriceRow[]): number[] {
   return result;
 }
 
-export function CumulativeReturnChart({ selectedTickers, allData }: Props) {
+export function CumulativeReturnChart({ selectedTickers, tickerData }: Props) {
   const tickers = selectedTickers.slice(0, 5);
   if (tickers.length === 0) return null;
 
@@ -41,7 +35,7 @@ export function CumulativeReturnChart({ selectedTickers, allData }: Props) {
 
   const dataByTicker = tickers.map((t) => ({
     ticker: t,
-    rows: getTickerData(allData, t),
+    rows: tickerData[t] ?? [],
   }));
 
   const dates = dataByTicker[0]?.rows.map((r) => r.date) ?? [];

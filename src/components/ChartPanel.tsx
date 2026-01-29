@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PriceRow } from "@/types";
-import { IndicatorTab } from "@/types";
+import { PriceRow, IndicatorTab } from "@/types";
 import { IndicatorCharts } from "./charts/IndicatorCharts";
 import { InfoBox } from "./InfoBox";
 import clsx from "clsx";
@@ -27,10 +26,10 @@ const TABS: { id: IndicatorTab; label: string }[] = [
 
 interface ChartPanelProps {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
 }
 
-export function ChartPanel({ selectedTickers, allData }: ChartPanelProps) {
+export function ChartPanel({ selectedTickers, tickerData }: ChartPanelProps) {
   const [activeTab, setActiveTab] = useState<IndicatorTab>("price");
 
   return (
@@ -64,7 +63,7 @@ export function ChartPanel({ selectedTickers, allData }: ChartPanelProps) {
             <IndicatorCharts
               tab={activeTab}
               selectedTickers={selectedTickers}
-              allData={allData}
+              tickerData={tickerData}
             />
           )}
         </div>

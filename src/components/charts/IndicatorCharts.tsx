@@ -1,6 +1,5 @@
 "use client";
 
-import { PriceRow } from "@/types";
 import { IndicatorTab } from "@/types";
 import { PriceChart } from "./PriceChart";
 import { VolumeChart } from "./VolumeChart";
@@ -18,18 +17,20 @@ import { CumulativeReturnChart } from "./CumulativeReturnChart";
 import { Distance200MAChart } from "./Distance200MAChart";
 import { VolumeSpikesChart } from "./VolumeSpikesChart";
 
+import { PriceRow } from "@/types";
+
 interface IndicatorChartsProps {
   tab: IndicatorTab;
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
 }
 
 export function IndicatorCharts({
   tab,
   selectedTickers,
-  allData,
+  tickerData,
 }: IndicatorChartsProps) {
-  const props = { selectedTickers, allData };
+  const props = { selectedTickers, tickerData };
 
   switch (tab) {
     case "price":

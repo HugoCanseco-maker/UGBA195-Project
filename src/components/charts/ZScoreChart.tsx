@@ -11,20 +11,19 @@ import {
   ReferenceLine,
 } from "recharts";
 import { PriceRow } from "@/types";
-import { getTickerData } from "@/lib/chartUtils";
 import { computeZScore } from "@/lib/data";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
   compact?: boolean;
 }
 
-export function ZScoreChart({ selectedTickers, allData, compact }: Props) {
+export function ZScoreChart({ selectedTickers, tickerData, compact }: Props) {
   const ticker = selectedTickers[0];
   if (!ticker) return null;
 
-  const rows = getTickerData(allData, ticker);
+  const rows = tickerData[ticker] ?? [];
   const zscore = computeZScore(rows, 20);
 
   const data = rows.map((r, i) => ({

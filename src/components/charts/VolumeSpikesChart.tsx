@@ -13,13 +13,7 @@ import { PriceRow } from "@/types";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
-}
-
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  tickerData: Record<string, PriceRow[]>;
 }
 
 function computeVolumeSpikes(rows: PriceRow[], period: number = 20, threshold: number = 2): { date: string; ratio: number; volume: number }[] {
@@ -38,11 +32,11 @@ function computeVolumeSpikes(rows: PriceRow[], period: number = 20, threshold: n
   return result;
 }
 
-export function VolumeSpikesChart({ selectedTickers, allData }: Props) {
+export function VolumeSpikesChart({ selectedTickers, tickerData }: Props) {
   const ticker = selectedTickers[0];
   if (!ticker) return null;
 
-  const rows = getTickerData(allData, ticker);
+  const rows = tickerData[ticker] ?? [];
   const spikes = computeVolumeSpikes(rows, 20, 2);
 
   const data = spikes.slice(-50).map((s) => ({

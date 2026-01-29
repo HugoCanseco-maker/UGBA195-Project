@@ -15,23 +15,17 @@ import { computeMA } from "@/lib/data";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
 }
 
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-export function Distance200MAChart({ selectedTickers, allData }: Props) {
+export function Distance200MAChart({ selectedTickers, tickerData }: Props) {
   const tickers = selectedTickers.slice(0, 5);
   if (tickers.length === 0) return null;
 
   const colors = ["#00aaff", "#00ff88", "#ffaa00", "#ff4444", "#aa44ff"];
 
   const dataByTicker = tickers.map((t) => {
-    const rows = getTickerData(allData, t);
+    const rows = tickerData[t] ?? [];
     const ma200 = computeMA(rows, 200);
     const dist = rows.map((r, i) =>
       isNaN(ma200[i]) || ma200[i] === 0 ? undefined : ((r.close - ma200[i]) / ma200[i]) * 100

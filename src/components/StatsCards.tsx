@@ -1,12 +1,11 @@
 "use client";
 
 import { PriceRow } from "@/types";
-import { getTickerData } from "@/lib/chartUtils";
 import clsx from "clsx";
 
 interface StatsCardsProps {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
 }
 
 function computeStats(rows: PriceRow[]): {
@@ -32,7 +31,7 @@ function computeStats(rows: PriceRow[]): {
   return { currentPrice: current, weekReturn, yearReturn, volatility };
 }
 
-export function StatsCards({ selectedTickers, allData }: StatsCardsProps) {
+export function StatsCards({ selectedTickers, tickerData }: StatsCardsProps) {
   if (selectedTickers.length === 0) {
     return (
       <div className="text-bloomberg-muted text-sm">
@@ -44,8 +43,19 @@ export function StatsCards({ selectedTickers, allData }: StatsCardsProps) {
   return (
     <div className="flex flex-wrap gap-4">
       {selectedTickers.map((ticker) => {
-        const rows = getTickerData(allData, ticker);
+        const rows = tickerData[ticker] ?? [];
         const stats = computeStats(rows);
+        if (rows.length === 0) {
+          return (
+            <div
+              key={ticker}
+              className="bg-bloomberg-panel border border-bloomberg-border rounded-lg px-4 py-3 min-w-[180px]"
+            >
+              <div className="text-bloomberg-amber font-semibold text-sm">{ticker}</div>
+              <div className="text-xs text-bloomberg-muted mt-2">Loading...</div>
+            </div>
+          );
+        }
         return (
           <div
             key={ticker}
@@ -86,4 +96,3 @@ export function StatsCards({ selectedTickers, allData }: StatsCardsProps) {
     </div>
   );
 }
-

@@ -14,20 +14,14 @@ import { computeStdDev } from "@/lib/data";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
 }
 
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-export function VolatilityChart({ selectedTickers, allData }: Props) {
+export function VolatilityChart({ selectedTickers, tickerData }: Props) {
   const ticker = selectedTickers[0];
   if (!ticker) return null;
 
-  const rows = getTickerData(allData, ticker);
+  const rows = tickerData[ticker] ?? [];
   const std = computeStdDev(rows, 21);
   const annualized = std.map((s, i) =>
     isNaN(s) || !rows[i]?.close ? undefined : (s / rows[i].close) * Math.sqrt(252) * 100

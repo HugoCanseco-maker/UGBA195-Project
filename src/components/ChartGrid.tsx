@@ -9,16 +9,16 @@ import { ZScoreChart } from "./charts/ZScoreChart";
 
 interface ChartGridProps {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
   loading: boolean;
   chartsGenerated: boolean;
 }
 
-export function ChartGrid({ selectedTickers, allData, loading, chartsGenerated }: ChartGridProps) {
+export function ChartGrid({ selectedTickers, tickerData, loading, chartsGenerated }: ChartGridProps) {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center text-bloomberg-muted text-sm">
-        Loading data from data/prices.csv...
+        Loading data from data/*.csv...
       </div>
     );
   }
@@ -31,7 +31,6 @@ export function ChartGrid({ selectedTickers, allData, loading, chartsGenerated }
     );
   }
 
-  // Charts only render after user clicks "Generate Charts"
   if (!chartsGenerated) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-bloomberg-muted text-sm gap-4">
@@ -41,7 +40,7 @@ export function ChartGrid({ selectedTickers, allData, loading, chartsGenerated }
     );
   }
 
-  const chartProps = { selectedTickers, allData };
+  const chartProps = { selectedTickers, tickerData };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 h-full">

@@ -5,13 +5,7 @@ import { useMemo } from "react";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
-}
-
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  tickerData: Record<string, PriceRow[]>;
 }
 
 function computeReturns(rows: PriceRow[]): number[] {
@@ -37,9 +31,9 @@ function computeBeta(stockReturns: number[], marketReturns: number[]): number {
   return varM === 0 ? 0 : cov / varM;
 }
 
-export function BetaChart({ selectedTickers, allData }: Props) {
+export function BetaChart({ selectedTickers, tickerData }: Props) {
   const betas = useMemo(() => {
-    const spyRows = getTickerData(allData, "SPY");
+    const spyRows = tickerData["SPY"] ?? [];
     const marketReturns = computeReturns(spyRows);
     if (marketReturns.length < 2) return [];
 
@@ -47,12 +41,12 @@ export function BetaChart({ selectedTickers, allData }: Props) {
       .filter((t) => t !== "SPY")
       .slice(0, 10)
       .map((ticker) => {
-        const rows = getTickerData(allData, ticker);
+        const rows = tickerData[ticker] ?? [];
         const stockReturns = computeReturns(rows);
         const beta = computeBeta(stockReturns, marketReturns);
         return { ticker, beta };
       });
-  }, [selectedTickers, allData]);
+  }, [selectedTickers, tickerData]);
 
   if (betas.length === 0) return null;
 

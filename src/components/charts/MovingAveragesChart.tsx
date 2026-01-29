@@ -11,20 +11,19 @@ import {
   Legend,
 } from "recharts";
 import { PriceRow } from "@/types";
-import { getTickerData } from "@/lib/chartUtils";
 import { computeMA } from "@/lib/data";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
   compact?: boolean;
 }
 
-export function MovingAveragesChart({ selectedTickers, allData, compact }: Props) {
+export function MovingAveragesChart({ selectedTickers, tickerData, compact }: Props) {
   const ticker = selectedTickers[0];
   if (!ticker) return null;
 
-  const rows = getTickerData(allData, ticker);
+  const rows = tickerData[ticker] ?? [];
   const ma50 = computeMA(rows, 50);
   const ma200 = computeMA(rows, 200);
 

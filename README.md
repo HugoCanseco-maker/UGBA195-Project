@@ -13,7 +13,7 @@ A junior Bloomberg Terminal-style dashboard for stock analysis. Created by **Hug
 
 ## Data Pipeline
 
-The app reads from the `data/` folder at the project root, which houses all 50 stock tickers in `data/prices.csv`. The API route serves this file—no live Yahoo Finance calls when deployed.
+The app reads from the `data/` folder at the project root, which houses **50+ individual CSV files** (e.g., `data/AAPL.csv`, `data/GOOGL.csv`, `data/NVDA.csv`). Each file has columns: `ticker,date,open,high,low,close,volume`. The API route `/api/ticker/[ticker]` serves each ticker's data—no live Yahoo Finance calls when deployed.
 
 ### Option 1: Download real data (recommended)
 

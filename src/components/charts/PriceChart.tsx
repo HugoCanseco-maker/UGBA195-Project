@@ -10,19 +10,18 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { PriceRow } from "@/types";
-import { getTickerData } from "@/lib/chartUtils";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
   compact?: boolean;
 }
 
-export function PriceChart({ selectedTickers, allData, compact }: Props) {
+export function PriceChart({ selectedTickers, tickerData, compact }: Props) {
   const ticker = selectedTickers[0];
   if (!ticker) return null;
 
-  const rows = getTickerData(allData, ticker);
+  const rows = tickerData[ticker] ?? [];
   const data = rows.map((r) => ({
     date: r.date,
     open: r.open,

@@ -16,20 +16,14 @@ import { computeMACD } from "@/lib/data";
 
 interface Props {
   selectedTickers: string[];
-  allData: PriceRow[];
+  tickerData: Record<string, PriceRow[]>;
 }
 
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-export function MACDChart({ selectedTickers, allData }: Props) {
+export function MACDChart({ selectedTickers, tickerData }: Props) {
   const ticker = selectedTickers[0];
   if (!ticker) return null;
 
-  const rows = getTickerData(allData, ticker);
+  const rows = tickerData[ticker] ?? [];
   const { macd, signal, histogram } = computeMACD(rows, 12, 26, 9);
 
   const data = rows.map((r, i) => ({
