@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  type Formatter,
 } from "recharts";
 import { PriceRow } from "@/types";
 
@@ -51,6 +52,14 @@ export function VolumeSpikesChart({ selectedTickers, allData }: Props) {
     volume: s.volume,
   }));
 
+  const volumeFormatter: Formatter<number, string> = (value, name, props) => {
+    const vol = props?.payload?.volume;
+    if (vol == null) {
+      return [value != null ? `${value.toFixed(2)}× avg` : "0", "Ratio"];
+    }
+    return [`${(value ?? 0).toFixed(2)}× avg (${(vol / 1e6).toFixed(2)}M vol)`, "Ratio"];
+  };
+
   if (data.length === 0) {
     return (
       <div className="h-[400px] flex items-center justify-center text-bloomberg-muted">
@@ -68,10 +77,7 @@ export function VolumeSpikesChart({ selectedTickers, allData }: Props) {
           <YAxis stroke="#666" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v.toFixed(1)}×`} />
           <Tooltip
             contentStyle={{ background: "#242424", border: "1px solid #333" }}
-            formatter={(v: number, name: string, props: { payload: { volume?: number } }) => [
-              `${v.toFixed(2)}× avg (${((props.payload.volume ?? 0) / 1e6).toFixed(2)}M vol)`,
-              "Ratio",
-            ]}
+            formatter={volumeFormatter}
           />
           <Bar dataKey="ratio" fill="#ffaa00" radius={[2, 2, 0, 0]} />
         </BarChart>
