@@ -11,7 +11,9 @@ export default function Dashboard() {
   const [allData, setAllData] = useState<PriceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [chartsGenerated, setChartsGenerated] = useState(false);
 
+  // Load CSV from data/ folder via API (data/prices.csv has all 50 tickers)
   useEffect(() => {
     fetch("/api/prices")
       .then((r) => r.json())
@@ -47,6 +49,11 @@ export default function Dashboard() {
       if (prev.length >= 5) return prev;
       return [...prev, ticker];
     });
+    setChartsGenerated(false); // Reset charts when selection changes
+  };
+
+  const handleGenerateCharts = () => {
+    setChartsGenerated(true);
   };
 
   return (
@@ -78,17 +85,39 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="flex-1 min-h-0 p-4 overflow-auto">
+          <div className="flex-1 min-h-0 p-4 overflow-auto flex flex-col">
             {error ? (
               <div className="h-full flex items-center justify-center text-bloomberg-red text-sm">
                 {error}
               </div>
             ) : (
-              <ChartGrid
-                selectedTickers={selectedTickers}
-                allData={allData}
-                loading={loading}
-              />
+              <>
+                {/* Tab: Generate Charts button - user must click to show graphs */}
+                <div className="flex-shrink-0 flex items-center gap-4 mb-4 pb-3 border-b border-bloomberg-border">
+                  <button
+                    onClick={handleGenerateCharts}
+                    disabled={selectedTickers.length === 0 || loading}
+                    className="px-4 py-2 bg-bloomberg-amber text-bloomberg-black font-mono text-sm font-semibold rounded hover:bg-bloomberg-amber/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Generate Charts
+                  </button>
+                  <span className="text-xs text-bloomberg-muted">
+                    {selectedTickers.length === 0
+                      ? "Select 1–5 tickers first"
+                      : chartsGenerated
+                        ? `Showing charts for ${selectedTickers.join(", ")}`
+                        : `Ready: ${selectedTickers.join(", ")} selected`}
+                  </span>
+                </div>
+                <div className="flex-1 min-h-0 overflow-auto">
+                  <ChartGrid
+                    selectedTickers={selectedTickers}
+                    allData={allData}
+                    loading={loading}
+                    chartsGenerated={chartsGenerated}
+                  />
+                </div>
+              </>
             )}
           </div>
         </main>

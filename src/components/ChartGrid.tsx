@@ -11,13 +11,14 @@ interface ChartGridProps {
   selectedTickers: string[];
   allData: PriceRow[];
   loading: boolean;
+  chartsGenerated: boolean;
 }
 
-export function ChartGrid({ selectedTickers, allData, loading }: ChartGridProps) {
+export function ChartGrid({ selectedTickers, allData, loading, chartsGenerated }: ChartGridProps) {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center text-bloomberg-muted text-sm">
-        Loading data...
+        Loading data from data/prices.csv...
       </div>
     );
   }
@@ -25,7 +26,17 @@ export function ChartGrid({ selectedTickers, allData, loading }: ChartGridProps)
   if (selectedTickers.length === 0) {
     return (
       <div className="h-full flex items-center justify-center text-bloomberg-muted text-sm">
-        Select 1–5 tickers from the watchlist to view charts
+        Select 1–5 tickers from the watchlist, then click Generate Charts
+      </div>
+    );
+  }
+
+  // Charts only render after user clicks "Generate Charts"
+  if (!chartsGenerated) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-bloomberg-muted text-sm gap-4">
+        <p>Selected: {selectedTickers.join(", ")}</p>
+        <p className="text-xs">Click &quot;Generate Charts&quot; above to view the 5 charts</p>
       </div>
     );
   }

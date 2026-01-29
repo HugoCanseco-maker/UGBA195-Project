@@ -13,6 +13,7 @@ export async function GET(request: Request) {
       : null;
 
   try {
+    // Read from data/ folder - houses all 50 stock tickers in prices.csv
     const dataPath = path.join(process.cwd(), "data", "prices.csv");
     if (!fs.existsSync(dataPath)) {
       return NextResponse.json(

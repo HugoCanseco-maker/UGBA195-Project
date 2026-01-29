@@ -8,12 +8,12 @@ A junior Bloomberg Terminal-style dashboard for stock analysis. Created by **Hug
 - **Stats cards** showing current price, 1-week return, 1-year return, and rolling volatility
 - **15 indicator views**: Price, Volume, Moving Averages, RSI, Z-Score, Volatility, Bollinger Bands, MACD, Correlation matrix, Relative strength vs SPY, Drawdown, Beta, Cumulative return, Distance from 200-day MA, Volume spikes
 - **Select 1–5 stocks** at a time from the watchlist
-- **"What you're seeing" info box** explaining each chart
+- **Generate Charts** button—click after selecting tickers to display the 5 charts
 - **Dark theme** Bloomberg-style UI
 
 ## Data Pipeline
 
-The app reads from pre-downloaded CSV files in the `data/` folder. No live API calls are made when deployed.
+The app reads from the `data/` folder at the project root, which houses all 50 stock tickers in `data/prices.csv`. The API route serves this file—no live Yahoo Finance calls when deployed.
 
 ### Option 1: Download real data (recommended)
 
