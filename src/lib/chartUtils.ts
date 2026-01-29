@@ -1,27 +1,40 @@
+import Papa from "papaparse";
 import { PriceRow } from "@/types";
 
 const TRADING_DAYS = 252;
 
+/** Map ticker to filename (BRK-B -> BRK_B) */
+function tickerToFilename(ticker: string): string {
+  return ticker.replace(/-/g, "_") + ".csv";
+}
+
 /**
- * Load ticker-specific CSV from /api/ticker/[ticker].
- * Data comes from data/AAPL.csv, data/GOOGL.csv, etc. (50+ individual files).
+ * Load ticker-specific CSV client-side from /data/AAPL.csv, etc.
+ * Files must be in public/data/ (e.g., public/data/AAPL.csv).
  * Returns last 252 trading days.
  */
 export async function getTickerData(ticker: string): Promise<PriceRow[]> {
   if (!ticker) return [];
 
   try {
-    const res = await fetch(`/api/ticker/${encodeURIComponent(ticker)}`);
-    const json = await res.json();
+    const filename = tickerToFilename(ticker);
+    const res = await fetch(`/data/${filename}`);
 
     if (!res.ok) {
-      console.error(json.error || "Failed to fetch");
+      console.error(`Failed to fetch /data/${filename}`);
       return [];
     }
 
-    const raw = (json.data || []) as unknown[];
-    const rows: PriceRow[] = raw
-      .filter((r): r is PriceRow => isPriceRow(r))
+    const csvText = await res.text();
+    const parsed = Papa.parse<Record<string, unknown>>(csvText, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+    });
+
+    const rows: PriceRow[] = (parsed.data ?? [])
+      .map((r) => normalizeRow(r))
+      .filter((r): r is PriceRow => r != null)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return rows.slice(-TRADING_DAYS);
@@ -31,13 +44,20 @@ export async function getTickerData(ticker: string): Promise<PriceRow[]> {
   }
 }
 
-function isPriceRow(r: unknown): r is PriceRow {
-  if (!r || typeof r !== "object") return false;
-  const o = r as Record<string, unknown>;
-  return (
-    typeof o.ticker === "string" &&
-    typeof o.date === "string" &&
-    typeof o.close === "number" &&
-    !isNaN(o.close)
-  );
+function normalizeRow(r: Record<string, unknown>): PriceRow | null {
+  const ticker = String(r.ticker ?? "").trim();
+  const date = String(r.date ?? "").trim();
+  const open = toNumber(r.open);
+  const high = toNumber(r.high);
+  const low = toNumber(r.low);
+  const close = toNumber(r.close);
+  const volume = toNumber(r.volume);
+  if (!ticker || !date || isNaN(close)) return null;
+  return { ticker, date, open, high, low, close, volume };
+}
+
+function toNumber(v: unknown): number {
+  if (typeof v === "number" && !isNaN(v)) return v;
+  const n = parseFloat(String(v ?? ""));
+  return isNaN(n) ? 0 : n;
 }

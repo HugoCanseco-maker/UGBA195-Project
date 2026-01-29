@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate sample OHLCV data when yfinance download fails (e.g. offline).
-Creates realistic-looking synthetic data for demo purposes.
+Creates individual CSV files in public/data/ for client-side fetch.
 Run: python scripts/generate_sample_data.py
 """
 
@@ -65,25 +65,25 @@ def generate_ticker_data(ticker: str, start: datetime, days: int) -> list[dict]:
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    data_dir = os.path.join(project_root, "data")
+    # Write to public/data/ for client-side fetch(/data/AAPL.csv)
+    data_dir = os.path.join(project_root, "public", "data")
     os.makedirs(data_dir, exist_ok=True)
 
     start = datetime(2020, 1, 1)
     days = (datetime(2026, 1, 28) - start).days
     random.seed(42)
 
-    all_rows = []
     for ticker in TICKERS:
         rows = generate_ticker_data(ticker, start, days)
-        all_rows.extend(rows)
+        filename = ticker.replace("-", "_") + ".csv"
+        out = os.path.join(data_dir, filename)
+        with open(out, "w") as f:
+            f.write("ticker,date,open,high,low,close,volume\n")
+            for r in rows:
+                f.write(f"{r['ticker']},{r['date']},{r['open']},{r['high']},{r['low']},{r['close']},{r['volume']}\n")
+        print(f"  ✓ {ticker} -> public/data/{filename} ({len(rows)} rows)")
 
-    out = os.path.join(data_dir, "prices.csv")
-    with open(out, "w") as f:
-        f.write("ticker,date,open,high,low,close,volume\n")
-        for r in all_rows:
-            f.write(f"{r['ticker']},{r['date']},{r['open']},{r['high']},{r['low']},{r['close']},{r['volume']}\n")
-
-    print(f"Generated {len(all_rows)} rows -> {out}")
+    print(f"\nGenerated {len(TICKERS)} ticker CSVs in public/data/")
 
 
 if __name__ == "__main__":

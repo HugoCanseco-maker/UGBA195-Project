@@ -73,12 +73,15 @@ def download_data():
     combined.to_csv(output_path, index=False)
     print(f"\nSaved {len(combined)} rows to {output_path}")
 
-    # Also save individual CSVs per ticker for flexibility
+    # Save individual CSVs to public/data/ for client-side fetch(/data/AAPL.csv)
+    public_data_dir = os.path.join(project_root, "public", "data")
+    os.makedirs(public_data_dir, exist_ok=True)
     for ticker in TICKERS:
         ticker_df = combined[combined["ticker"] == ticker]
         if not ticker_df.empty:
-            ticker_path = os.path.join(data_dir, f"{ticker.replace('-', '_')}.csv")
+            ticker_path = os.path.join(public_data_dir, f"{ticker.replace('-', '_')}.csv")
             ticker_df.to_csv(ticker_path, index=False)
+    print(f"Saved individual CSVs to public/data/")
 
 
 if __name__ == "__main__":

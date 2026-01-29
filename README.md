@@ -13,7 +13,7 @@ A junior Bloomberg Terminal-style dashboard for stock analysis. Created by **Hug
 
 ## Data Pipeline
 
-The app reads from the `data/` folder at the project root, which houses **50+ individual CSV files** (e.g., `data/AAPL.csv`, `data/GOOGL.csv`, `data/NVDA.csv`). Each file has columns: `ticker,date,open,high,low,close,volume`. The API route `/api/ticker/[ticker]` serves each ticker's data—no live Yahoo Finance calls when deployed.
+The app loads CSV files **client-side** from `public/data/` (e.g., `public/data/AAPL.csv`). Each file has columns: `ticker,date,open,high,low,close,volume`. No API routes—PapaParse parses CSVs in the browser. No live Yahoo Finance calls when deployed.
 
 ### Option 1: Download real data (recommended)
 
@@ -27,7 +27,7 @@ The app reads from the `data/` folder at the project root, which houses **50+ in
    python scripts/download_data.py
    ```
 
-   This downloads OHLCV data for all ~50 tickers from Yahoo Finance (2020–2026) and saves to `data/prices.csv`.
+   This downloads OHLCV data for all ~50 tickers from Yahoo Finance (2020–2026) and saves individual CSVs to `public/data/`.
 
 ### Option 2: Generate sample data (offline / demo)
 
@@ -37,7 +37,7 @@ If you're offline or Yahoo Finance is unavailable:
 python scripts/generate_sample_data.py
 ```
 
-This creates synthetic sample data in `data/prices.csv` so the app works for demo purposes.
+This creates synthetic sample data in `public/data/` (50 individual CSVs) so the app works for demo purposes.
 
 ## Running the app locally
 
@@ -59,11 +59,11 @@ This creates synthetic sample data in `data/prices.csv` so the app works for dem
 
 2. Connect the repo to Vercel and deploy.
 
-3. **Important**: Ensure `data/prices.csv` exists before deploying. Either:
-   - Run `python scripts/download_data.py` locally and commit `data/prices.csv`, or
-   - Run `python scripts/generate_sample_data.py` and commit the file.
+3. **Important**: Ensure `public/data/` contains ticker CSVs before deploying. Either:
+   - Run `python scripts/download_data.py` locally and commit `public/data/*.csv`, or
+   - Run `python scripts/generate_sample_data.py` and commit the files.
 
-   The app reads from these CSVs and does not make live Yahoo Finance API calls when deployed.
+   The app loads CSVs client-side and does not make live Yahoo Finance API calls when deployed.
 
 ## Project structure
 
