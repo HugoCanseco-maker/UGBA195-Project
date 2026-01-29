@@ -16,9 +16,11 @@ import {
 interface CumulativeReturnChartProps {
   data: CumulativeReturnData[];
   ticker: string;
+  expanded?: boolean;
 }
 
-export default function CumulativeReturnChart({ data, ticker }: CumulativeReturnChartProps) {
+export default function CumulativeReturnChart({ data, ticker, expanded = false }: CumulativeReturnChartProps) {
+  const tickFontSize = expanded ? 14 : 10;
   const chartData = data.map(d => ({
     date: d.date,
     stock: d.stockReturn,
@@ -32,23 +34,23 @@ export default function CumulativeReturnChart({ data, ticker }: CumulativeReturn
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+      <LineChart data={chartData} margin={{ top: expanded ? 10 : 5, right: expanded ? 10 : 5, bottom: expanded ? 10 : 5, left: expanded ? 10 : 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
         <XAxis 
           dataKey="date" 
           tickFormatter={formatDate}
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
           interval="preserveStartEnd"
-          minTickGap={50}
+          minTickGap={expanded ? 60 : 50}
         />
         <YAxis 
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
           domain={['auto', 'auto']}
-          width={50}
+          width={expanded ? 60 : 50}
           tickFormatter={(v) => `${v.toFixed(0)}%`}
         />
         <Tooltip
@@ -56,9 +58,10 @@ export default function CumulativeReturnChart({ data, ticker }: CumulativeReturn
             backgroundColor: '#09090b',
             border: '1px solid #1a1a1a',
             borderRadius: '4px',
-            fontSize: '12px',
+            fontSize: expanded ? '14px' : '12px',
           }}
           labelStyle={{ color: '#ff9900' }}
+          cursor={expanded ? { stroke: '#ff9900', strokeWidth: 2 } : false}
           formatter={(value: number, name: string) => [
             `${value.toFixed(2)}%`,
             name === 'stock' ? ticker : 'SPY'
@@ -66,7 +69,7 @@ export default function CumulativeReturnChart({ data, ticker }: CumulativeReturn
           labelFormatter={formatDate}
         />
         <Legend 
-          wrapperStyle={{ fontSize: '10px' }}
+          wrapperStyle={{ fontSize: expanded ? '12px' : '10px' }}
           formatter={(value) => value === 'stock' ? ticker : 'SPY'}
         />
         <ReferenceLine y={0} stroke="#888888" strokeWidth={0.5} />

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { StockData, MetricType, METRICS } from '@/types';
 import ChartPanel from './ChartPanel';
+import ChartModal from './ChartModal';
 import TimeRangeToggle, { type TimeRange } from './TimeRangeToggle';
 import PriceChart from './charts/PriceChart';
 import MovingAverageChart from './charts/MovingAverageChart';
@@ -52,6 +53,7 @@ interface ChartGridProps {
 
 export default function ChartGrid({ stockData, spyData, selectedMetrics, ticker }: ChartGridProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1y');
+  const [expandedMetricId, setExpandedMetricId] = useState<MetricType | null>(null);
   const getMetricConfig = (id: MetricType) => METRICS.find(m => m.id === id)!;
 
   // Pre-calculate all series from full dataset (so MA200, etc. are valid)
@@ -94,127 +96,74 @@ export default function ChartGrid({ stockData, spyData, selectedMetrics, ticker 
 
   const applyTimeRange = <T,>(arr: T[]) => sliceByTimeRange(arr, timeRange);
 
-  const renderChart = (metricId: MetricType) => {
-    const config = getMetricConfig(metricId);
-
+  const renderChartContent = (metricId: MetricType, expanded = false) => {
     switch (metricId) {
       case 'price':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <PriceChart data={applyTimeRange(stockData)} />
-          </ChartPanel>
-        );
-
+        return <PriceChart data={applyTimeRange(stockData)} expanded={expanded} />;
       case 'ma':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <MovingAverageChart data={applyTimeRange(computed.ma)} />
-          </ChartPanel>
-        );
-
+        return <MovingAverageChart data={applyTimeRange(computed.ma)} expanded={expanded} />;
       case 'rsi':
-        return (
-          <ChartPanel
-            title={`${ticker} - ${config.name}`}
-            description={config.description}
-            alertCondition={isOverbought || isOversold}
-            alertText={
-              isOverbought
-                ? `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERBOUGHT. Price may be due for a pullback.`
-                : `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERSOLD. Price may be due for a bounce.`
-            }
-          >
-            <RSIChart data={applyTimeRange(computed.rsi)} />
-          </ChartPanel>
-        );
-
+        return <RSIChart data={applyTimeRange(computed.rsi)} expanded={expanded} />;
       case 'macd':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <MACDChart data={applyTimeRange(computed.macd)} />
-          </ChartPanel>
-        );
-
+        return <MACDChart data={applyTimeRange(computed.macd)} expanded={expanded} />;
       case 'bollinger':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <BollingerChart data={applyTimeRange(computed.bollinger)} />
-          </ChartPanel>
-        );
-
+        return <BollingerChart data={applyTimeRange(computed.bollinger)} expanded={expanded} />;
       case 'volatility':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <VolatilityChart data={applyTimeRange(computed.volatility)} />
-          </ChartPanel>
-        );
-
+        return <VolatilityChart data={applyTimeRange(computed.volatility)} expanded={expanded} />;
       case 'zscore':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <ZScoreChart data={applyTimeRange(computed.zscore)} />
-          </ChartPanel>
-        );
-
+        return <ZScoreChart data={applyTimeRange(computed.zscore)} expanded={expanded} />;
       case 'distance200ma':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <DistanceMAChart data={applyTimeRange(computed.distanceMa)} />
-          </ChartPanel>
-        );
-
+        return <DistanceMAChart data={applyTimeRange(computed.distanceMa)} expanded={expanded} />;
       case 'relativeStrength':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <RelativeStrengthChart data={applyTimeRange(computed.relStrength)} />
-          </ChartPanel>
-        );
-
+        return <RelativeStrengthChart data={applyTimeRange(computed.relStrength)} expanded={expanded} />;
       case 'cumulativeReturn':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <CumulativeReturnChart data={applyTimeRange(computed.cumReturn)} ticker={ticker} />
-          </ChartPanel>
-        );
-
+        return <CumulativeReturnChart data={applyTimeRange(computed.cumReturn)} ticker={ticker} expanded={expanded} />;
       case 'drawdown':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <DrawdownChart data={applyTimeRange(computed.drawdown)} />
-          </ChartPanel>
-        );
-
+        return <DrawdownChart data={applyTimeRange(computed.drawdown)} expanded={expanded} />;
       case 'volume':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <VolumeChart data={applyTimeRange(computed.volume)} />
-          </ChartPanel>
-        );
-
+        return <VolumeChart data={applyTimeRange(computed.volume)} expanded={expanded} />;
       case 'volumeSpikes':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <VolumeSpikesChart data={applyTimeRange(computed.volumeSpikes)} />
-          </ChartPanel>
-        );
-
+        return <VolumeSpikesChart data={applyTimeRange(computed.volumeSpikes)} expanded={expanded} />;
       case 'priceChange':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <PriceChangeChart data={applyTimeRange(computed.priceChange)} />
-          </ChartPanel>
-        );
-
+        return <PriceChangeChart data={applyTimeRange(computed.priceChange)} expanded={expanded} />;
       case 'beta':
-        return (
-          <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <BetaChart data={applyTimeRange(computed.beta)} />
-          </ChartPanel>
-        );
-
+        return <BetaChart data={applyTimeRange(computed.beta)} expanded={expanded} />;
       default:
         return null;
     }
+  };
+
+  const renderChart = (metricId: MetricType) => {
+    const config = getMetricConfig(metricId);
+    const title = `${ticker} - ${config.name}`;
+
+    if (metricId === 'rsi') {
+      return (
+        <ChartPanel
+          title={title}
+          description={config.description}
+          alertCondition={isOverbought || isOversold}
+          alertText={
+            isOverbought
+              ? `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERBOUGHT. Price may be due for a pullback.`
+              : `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERSOLD. Price may be due for a bounce.`
+          }
+          onExpand={() => setExpandedMetricId(metricId)}
+        >
+          {renderChartContent(metricId, false)}
+        </ChartPanel>
+      );
+    }
+
+    return (
+      <ChartPanel
+        title={title}
+        description={config.description}
+        onExpand={() => setExpandedMetricId(metricId)}
+      >
+        {renderChartContent(metricId, false)}
+      </ChartPanel>
+    );
   };
 
   if (selectedMetrics.length === 0) {
@@ -230,13 +179,24 @@ export default function ChartGrid({ stockData, spyData, selectedMetrics, ticker 
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {selectedMetrics.map(metricId => (
-          <div key={metricId}>{renderChart(metricId)}</div>
-        ))}
+    <>
+      <div className="flex-1 overflow-y-auto p-6">
+        <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {selectedMetrics.map(metricId => (
+            <div key={metricId}>{renderChart(metricId)}</div>
+          ))}
+        </div>
       </div>
-    </div>
+      {expandedMetricId && (
+        <ChartModal
+          isOpen={!!expandedMetricId}
+          onClose={() => setExpandedMetricId(null)}
+          title={`${ticker} - ${getMetricConfig(expandedMetricId).name}`}
+        >
+          {renderChartContent(expandedMetricId, true)}
+        </ChartModal>
+      )}
+    </>
   );
 }

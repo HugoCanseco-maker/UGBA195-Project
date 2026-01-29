@@ -92,9 +92,12 @@ function CandlestickLayer(props: CandlestickLayerProps) {
 
 interface PriceChartProps {
   data: StockData[];
+  expanded?: boolean;
 }
 
-export default function PriceChart({ data }: PriceChartProps) {
+export default function PriceChart({ data, expanded = false }: PriceChartProps) {
+  const tickFontSize = expanded ? 14 : 10;
+  const axisWidth = expanded ? 70 : 60;
   const chartData = data.map(d => ({
     date: d.date,
     open: d.open,
@@ -122,8 +125,8 @@ export default function PriceChart({ data }: PriceChartProps) {
           backgroundColor: '#09090b',
           border: '1px solid #1a1a1a',
           borderRadius: '4px',
-          padding: '8px 12px',
-          fontSize: '12px',
+          padding: expanded ? '12px 16px' : '8px 12px',
+          fontSize: expanded ? '14px' : '12px',
           fontFamily: 'JetBrains Mono, monospace',
         }}
       >
@@ -138,28 +141,31 @@ export default function PriceChart({ data }: PriceChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+      <ComposedChart data={chartData} margin={{ top: expanded ? 10 : 5, right: expanded ? 10 : 5, bottom: expanded ? 10 : 5, left: expanded ? 10 : 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
         <XAxis
           dataKey="date"
           type="category"
           tickFormatter={formatDate}
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
           interval="preserveStartEnd"
-          minTickGap={40}
+          minTickGap={expanded ? 60 : 40}
         />
         <YAxis
           type="number"
           domain={['auto', 'auto']}
           tickFormatter={formatPrice}
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
-          width={60}
+          width={axisWidth}
         />
-        <Tooltip content={renderTooltip} />
+        <Tooltip
+          content={renderTooltip}
+          cursor={expanded ? { stroke: '#ff9900', strokeWidth: 2 } : false}
+        />
         {/* Invisible lines so y-domain spans high/low and Tooltip receives OHLC */}
         <Line dataKey="high" stroke="transparent" strokeWidth={0} dot={false} isAnimationActive={false} />
         <Line dataKey="low" stroke="transparent" strokeWidth={0} dot={false} isAnimationActive={false} />

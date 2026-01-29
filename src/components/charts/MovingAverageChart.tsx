@@ -14,10 +14,11 @@ import {
 
 interface MovingAverageChartProps {
   data: MovingAverageData[];
+  expanded?: boolean;
 }
 
-export default function MovingAverageChart({ data }: MovingAverageChartProps) {
-  // Use full 1-year dataset for moving average visualization
+export default function MovingAverageChart({ data, expanded = false }: MovingAverageChartProps) {
+  const tickFontSize = expanded ? 14 : 10;
   const chartData = data.map(d => ({
     date: d.date,
     close: d.close,
@@ -34,33 +35,34 @@ export default function MovingAverageChart({ data }: MovingAverageChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+      <LineChart data={chartData} margin={{ top: expanded ? 10 : 5, right: expanded ? 10 : 5, bottom: expanded ? 10 : 5, left: expanded ? 10 : 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
         <XAxis 
           dataKey="date" 
           tickFormatter={formatDate}
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
           interval="preserveStartEnd"
-          minTickGap={50}
+          minTickGap={expanded ? 60 : 50}
         />
         <YAxis 
           tickFormatter={formatPrice}
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
           domain={['auto', 'auto']}
-          width={60}
+          width={expanded ? 70 : 60}
         />
         <Tooltip
           contentStyle={{
             backgroundColor: '#09090b',
             border: '1px solid #1a1a1a',
             borderRadius: '4px',
-            fontSize: '12px',
+            fontSize: expanded ? '14px' : '12px',
           }}
           labelStyle={{ color: '#ff9900' }}
+          cursor={expanded ? { stroke: '#ff9900', strokeWidth: 2 } : false}
           formatter={(value: number, name: string) => [
             formatPrice(value),
             name === 'close' ? 'Price' : name === 'ma50' ? '50 MA' : '200 MA'
@@ -68,7 +70,7 @@ export default function MovingAverageChart({ data }: MovingAverageChartProps) {
           labelFormatter={formatDate}
         />
         <Legend 
-          wrapperStyle={{ fontSize: '10px' }}
+          wrapperStyle={{ fontSize: expanded ? '12px' : '10px' }}
           formatter={(value) => value === 'close' ? 'Price' : value === 'ma50' ? '50 MA' : '200 MA'}
         />
         <Line

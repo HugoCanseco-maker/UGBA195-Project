@@ -15,10 +15,11 @@ import {
 
 interface VolumeChartProps {
   data: VolumeData[];
+  expanded?: boolean;
 }
 
-export default function VolumeChart({ data }: VolumeChartProps) {
-  // Use full 1-year dataset
+export default function VolumeChart({ data, expanded = false }: VolumeChartProps) {
+  const tickFontSize = expanded ? 14 : 10;
   const chartData = data.map(d => ({
     date: d.date,
     volume: d.volume / 1000000, // Convert to millions
@@ -34,33 +35,34 @@ export default function VolumeChart({ data }: VolumeChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+      <ComposedChart data={chartData} margin={{ top: expanded ? 10 : 5, right: expanded ? 10 : 5, bottom: expanded ? 10 : 5, left: expanded ? 10 : 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
         <XAxis 
           dataKey="date" 
           tickFormatter={formatDate}
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
           interval="preserveStartEnd"
-          minTickGap={50}
+          minTickGap={expanded ? 60 : 50}
         />
         <YAxis 
           tickFormatter={formatVolume}
-          tick={{ fill: '#888888', fontSize: 10 }}
+          tick={{ fill: '#888888', fontSize: tickFontSize }}
           axisLine={{ stroke: '#1a1a1a' }}
           tickLine={{ stroke: '#1a1a1a' }}
           domain={[0, 'auto']}
-          width={50}
+          width={expanded ? 60 : 50}
         />
         <Tooltip
           contentStyle={{
             backgroundColor: '#09090b',
             border: '1px solid #1a1a1a',
             borderRadius: '4px',
-            fontSize: '12px',
+            fontSize: expanded ? '14px' : '12px',
           }}
           labelStyle={{ color: '#ff9900' }}
+          cursor={expanded ? { stroke: '#ff9900', strokeWidth: 2 } : false}
           formatter={(value: number, name: string) => [
             formatVolume(value),
             name === 'volume' ? 'Volume' : '20-Day Avg'
@@ -68,7 +70,7 @@ export default function VolumeChart({ data }: VolumeChartProps) {
           labelFormatter={formatDate}
         />
         <Legend 
-          wrapperStyle={{ fontSize: '10px' }}
+          wrapperStyle={{ fontSize: expanded ? '12px' : '10px' }}
           formatter={(value) => value === 'volume' ? 'Volume' : '20-Day Avg'}
         />
         <Bar
