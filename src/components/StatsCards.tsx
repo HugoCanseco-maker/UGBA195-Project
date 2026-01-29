@@ -1,15 +1,12 @@
 "use client";
 
 import { PriceRow } from "@/types";
+import { getTickerData } from "@/lib/chartUtils";
 import clsx from "clsx";
 
 interface StatsCardsProps {
   selectedTickers: string[];
   allData: PriceRow[];
-}
-
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData.filter((r) => r.ticker === ticker).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function computeStats(rows: PriceRow[]): {

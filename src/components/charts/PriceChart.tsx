@@ -8,22 +8,17 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
 import { PriceRow } from "@/types";
+import { getTickerData } from "@/lib/chartUtils";
 
 interface Props {
   selectedTickers: string[];
   allData: PriceRow[];
+  compact?: boolean;
 }
 
-function getTickerData(allData: PriceRow[], ticker: string): PriceRow[] {
-  return allData
-    .filter((r) => r.ticker === ticker)
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-export function PriceChart({ selectedTickers, allData }: Props) {
+export function PriceChart({ selectedTickers, allData, compact }: Props) {
   const ticker = selectedTickers[0];
   if (!ticker) return null;
 
@@ -36,24 +31,37 @@ export function PriceChart({ selectedTickers, allData }: Props) {
     close: r.close,
   }));
 
-  const colors = ["#00ff88", "#ff4444"];
+  if (data.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center text-bloomberg-muted text-xs">
+        No data for {ticker}
+      </div>
+    );
+  }
+
+  const chartData = data.slice(-252);
+
   return (
-    <div className="h-[400px] w-full">
+    <div className={compact ? "h-full min-h-[180px]" : "h-[400px] w-full"}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data.slice(-252)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 10 }} />
-          <YAxis stroke="#666" tick={{ fontSize: 10 }} domain={["auto", "auto"]} />
-          <Tooltip
-            contentStyle={{ background: "#242424", border: "1px solid #333" }}
-            labelStyle={{ color: "#ffaa00" }}
+        <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="2 2" stroke="#333" />
+          <XAxis
+            dataKey="date"
+            stroke="#666"
+            tick={{ fontSize: compact ? 8 : 10 }}
+            tickFormatter={(v) => (v ? String(v).slice(5) : "")}
           />
-          <Line type="monotone" dataKey="close" stroke="#00aaff" strokeWidth={2} dot={false} />
+          <YAxis stroke="#666" tick={{ fontSize: compact ? 8 : 10 }} domain={["auto", "auto"]} width={compact ? 36 : 50} />
+          <Tooltip
+            contentStyle={{ background: "#242424", border: "1px solid #333", fontSize: 11 }}
+            labelStyle={{ color: "#ffaa00" }}
+            formatter={(v: number) => [v?.toFixed(2), "Close"]}
+            labelFormatter={(v) => v}
+          />
+          <Line type="monotone" dataKey="close" stroke="#00aaff" strokeWidth={compact ? 1.5 : 2} dot={false} />
         </ComposedChart>
       </ResponsiveContainer>
-      <p className="text-xs text-bloomberg-muted mt-2">
-        OHLC close price • {ticker} • Last 252 trading days
-      </p>
     </div>
   );
 }

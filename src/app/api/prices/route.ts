@@ -4,7 +4,13 @@ import path from "path";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const ticker = searchParams.get("ticker");
+  const tickerParam = searchParams.get("ticker");
+  const tickersParam = searchParams.get("tickers");
+  const tickersFilter = tickersParam
+    ? tickersParam.split(",").map((t) => t.trim().toUpperCase()).filter(Boolean)
+    : tickerParam
+      ? [tickerParam.toUpperCase()]
+      : null;
 
   try {
     const dataPath = path.join(process.cwd(), "data", "prices.csv");
@@ -33,7 +39,8 @@ export async function GET(request: Request) {
           ? parseFloat(v) || 0
           : v;
       });
-      if (!ticker || (row.ticker as string) === ticker) {
+      const rowTicker = String(row.ticker ?? "").toUpperCase();
+      if (!tickersFilter || tickersFilter.includes(rowTicker)) {
         rows.push(row);
       }
     }
