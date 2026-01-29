@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { StockData, MetricType, METRICS } from '@/types';
 import ChartPanel from './ChartPanel';
+import TimeRangeToggle, { type TimeRange } from './TimeRangeToggle';
 import PriceChart from './charts/PriceChart';
 import MovingAverageChart from './charts/MovingAverageChart';
 import RSIChart from './charts/RSIChart';
@@ -35,6 +37,12 @@ import {
   getLatestRSI,
 } from '@/lib/financeMath';
 
+const DAYS_120 = 120;
+
+function sliceByTimeRange<T>(arr: T[], range: TimeRange): T[] {
+  return range === '120d' ? arr.slice(-DAYS_120) : arr;
+}
+
 interface ChartGridProps {
   stockData: StockData[];
   spyData: StockData[];
@@ -43,131 +51,167 @@ interface ChartGridProps {
 }
 
 export default function ChartGrid({ stockData, spyData, selectedMetrics, ticker }: ChartGridProps) {
+  const [timeRange, setTimeRange] = useState<TimeRange>('1y');
   const getMetricConfig = (id: MetricType) => METRICS.find(m => m.id === id)!;
-  
-  // Pre-calculate data for metrics that need it
-  const rsiData = calculateRSI(stockData);
-  const latestRSI = getLatestRSI(rsiData);
+
+  // Pre-calculate all series from full dataset (so MA200, etc. are valid)
+  const computed = useMemo(() => {
+    const ma = calculateMovingAverages(stockData);
+    const rsi = calculateRSI(stockData);
+    const macd = calculateMACD(stockData);
+    const bollinger = calculateBollingerBands(stockData);
+    const volatility = calculateVolatility(stockData);
+    const zscore = calculateZScore(stockData);
+    const distanceMa = calculateDistanceFrom200MA(stockData);
+    const relStrength = calculateRelativeStrength(stockData, spyData);
+    const cumReturn = calculateCumulativeReturn(stockData, spyData);
+    const drawdown = calculateDrawdown(stockData);
+    const volume = calculateVolumeAnalysis(stockData);
+    const volumeSpikes = calculateVolumeSpikes(stockData);
+    const priceChange = calculatePriceChange(stockData);
+    const beta = calculateBeta(stockData, spyData);
+    return {
+      ma,
+      rsi,
+      macd,
+      bollinger,
+      volatility,
+      zscore,
+      distanceMa,
+      relStrength,
+      cumReturn,
+      drawdown,
+      volume,
+      volumeSpikes,
+      priceChange,
+      beta,
+    };
+  }, [stockData, spyData]);
+
+  const latestRSI = getLatestRSI(computed.rsi);
   const isOverbought = latestRSI > 70;
   const isOversold = latestRSI < 30;
 
+  const applyTimeRange = <T,>(arr: T[]) => sliceByTimeRange(arr, timeRange);
+
   const renderChart = (metricId: MetricType) => {
     const config = getMetricConfig(metricId);
-    
+
     switch (metricId) {
       case 'price':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <PriceChart data={stockData} />
+            <PriceChart data={applyTimeRange(stockData)} />
           </ChartPanel>
         );
-      
+
       case 'ma':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <MovingAverageChart data={calculateMovingAverages(stockData)} />
+            <MovingAverageChart data={applyTimeRange(computed.ma)} />
           </ChartPanel>
         );
-      
+
       case 'rsi':
         return (
-          <ChartPanel 
-            title={`${ticker} - ${config.name}`} 
+          <ChartPanel
+            title={`${ticker} - ${config.name}`}
             description={config.description}
             alertCondition={isOverbought || isOversold}
-            alertText={isOverbought 
-              ? `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERBOUGHT. Price may be due for a pullback.`
-              : `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERSOLD. Price may be due for a bounce.`
+            alertText={
+              isOverbought
+                ? `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERBOUGHT. Price may be due for a pullback.`
+                : `⚠️ RSI at ${latestRSI.toFixed(1)} - OVERSOLD. Price may be due for a bounce.`
             }
           >
-            <RSIChart data={rsiData} />
+            <RSIChart data={applyTimeRange(computed.rsi)} />
           </ChartPanel>
         );
-      
+
       case 'macd':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <MACDChart data={calculateMACD(stockData)} />
+            <MACDChart data={applyTimeRange(computed.macd)} />
           </ChartPanel>
         );
-      
+
       case 'bollinger':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <BollingerChart data={calculateBollingerBands(stockData)} />
+            <BollingerChart data={applyTimeRange(computed.bollinger)} />
           </ChartPanel>
         );
-      
+
       case 'volatility':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <VolatilityChart data={calculateVolatility(stockData)} />
+            <VolatilityChart data={applyTimeRange(computed.volatility)} />
           </ChartPanel>
         );
-      
+
       case 'zscore':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <ZScoreChart data={calculateZScore(stockData)} />
+            <ZScoreChart data={applyTimeRange(computed.zscore)} />
           </ChartPanel>
         );
-      
+
       case 'distance200ma':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <DistanceMAChart data={calculateDistanceFrom200MA(stockData)} />
+            <DistanceMAChart data={applyTimeRange(computed.distanceMa)} />
           </ChartPanel>
         );
-      
+
       case 'relativeStrength':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <RelativeStrengthChart data={calculateRelativeStrength(stockData, spyData)} />
+            <RelativeStrengthChart data={applyTimeRange(computed.relStrength)} />
           </ChartPanel>
         );
-      
+
       case 'cumulativeReturn':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <CumulativeReturnChart data={calculateCumulativeReturn(stockData, spyData)} ticker={ticker} />
+            <CumulativeReturnChart data={applyTimeRange(computed.cumReturn)} ticker={ticker} />
           </ChartPanel>
         );
-      
+
       case 'drawdown':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <DrawdownChart data={calculateDrawdown(stockData)} />
+            <DrawdownChart data={applyTimeRange(computed.drawdown)} />
           </ChartPanel>
         );
-      
+
       case 'volume':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <VolumeChart data={calculateVolumeAnalysis(stockData)} />
+            <VolumeChart data={applyTimeRange(computed.volume)} />
           </ChartPanel>
         );
-      
+
       case 'volumeSpikes':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <VolumeSpikesChart data={calculateVolumeSpikes(stockData)} />
+            <VolumeSpikesChart data={applyTimeRange(computed.volumeSpikes)} />
           </ChartPanel>
         );
-      
+
       case 'priceChange':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <PriceChangeChart data={calculatePriceChange(stockData)} />
+            <PriceChangeChart data={applyTimeRange(computed.priceChange)} />
           </ChartPanel>
         );
-      
+
       case 'beta':
         return (
           <ChartPanel title={`${ticker} - ${config.name}`} description={config.description}>
-            <BetaChart data={calculateBeta(stockData, spyData)} />
+            <BetaChart data={applyTimeRange(computed.beta)} />
           </ChartPanel>
         );
-      
+
       default:
         return null;
     }
@@ -187,11 +231,10 @@ export default function ChartGrid({ stockData, spyData, selectedMetrics, ticker 
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
+      <TimeRangeToggle value={timeRange} onChange={setTimeRange} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {selectedMetrics.map(metricId => (
-          <div key={metricId}>
-            {renderChart(metricId)}
-          </div>
+          <div key={metricId}>{renderChart(metricId)}</div>
         ))}
       </div>
     </div>
