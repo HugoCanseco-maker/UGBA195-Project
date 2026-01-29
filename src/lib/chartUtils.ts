@@ -26,13 +26,14 @@ export async function getTickerData(ticker: string): Promise<PriceRow[]> {
     }
 
     const csvText = await res.text();
-    const parsed = Papa.parse<Record<string, unknown>>(csvText, {
+    const parsed = Papa.parse(csvText, {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
     });
 
-    const rows: PriceRow[] = (parsed.data ?? [])
+    const raw = (parsed.data ?? []) as Record<string, unknown>[];
+    const rows: PriceRow[] = raw
       .map((r) => normalizeRow(r))
       .filter((r): r is PriceRow => r != null)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
