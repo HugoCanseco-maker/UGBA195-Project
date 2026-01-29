@@ -1,63 +1,84 @@
-"use client";
+'use client';
 
+import { ZScoreData } from '@/types';
 import {
-  LineChart,
+  ResponsiveContainer,
+  ComposedChart,
   Line,
+  Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
   ReferenceLine,
-} from "recharts";
-import { PriceRow } from "@/types";
-import { computeZScore } from "@/lib/data";
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
-  compact?: boolean;
+interface ZScoreChartProps {
+  data: ZScoreData[];
 }
 
-export function ZScoreChart({ selectedTickers, tickerData, compact }: Props) {
-  const ticker = selectedTickers[0];
-  if (!ticker) return null;
-
-  const rows = tickerData[ticker] ?? [];
-  const zscore = computeZScore(rows, 20);
-
-  const data = rows.map((r, i) => ({
-    date: r.date,
-    zscore: isNaN(zscore[i]) ? undefined : zscore[i],
+export default function ZScoreChart({ data }: ZScoreChartProps) {
+  // Use full 1-year dataset
+  const chartData = data.map(d => ({
+    date: d.date,
+    zscore: d.zscore,
   }));
 
-  if (data.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center text-bloomberg-muted text-xs">
-        No data for {ticker}
-      </div>
-    );
-  }
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
-    <div className={compact ? "h-full min-h-[180px]" : "h-[400px] w-full"}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="2 2" stroke="#333" />
-          <XAxis
-            dataKey="date"
-            stroke="#666"
-            tick={{ fontSize: compact ? 8 : 10 }}
-            tickFormatter={(v) => (v ? String(v).slice(5) : "")}
-          />
-          <YAxis stroke="#666" tick={{ fontSize: compact ? 8 : 10 }} width={compact ? 28 : 40} />
-          <Tooltip contentStyle={{ background: "#242424", border: "1px solid #333", fontSize: 11 }} />
-          <ReferenceLine y={2} stroke="#ff4444" strokeDasharray="2 2" />
-          <ReferenceLine y={-2} stroke="#00ff88" strokeDasharray="2 2" />
-          <ReferenceLine y={0} stroke="#666" strokeDasharray="1 1" />
-          <Line type="monotone" dataKey="zscore" stroke="#00aaff" strokeWidth={compact ? 1.5 : 2} dot={false} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={[-3, 3]}
+          ticks={[-3, -2, -1, 0, 1, 2, 3]}
+          width={35}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number) => [value.toFixed(2), 'Z-Score']}
+          labelFormatter={formatDate}
+        />
+        <ReferenceLine y={2} stroke="#ff4444" strokeDasharray="5 5" strokeWidth={1} />
+        <ReferenceLine y={-2} stroke="#00ff00" strokeDasharray="5 5" strokeWidth={1} />
+        <ReferenceLine y={0} stroke="#888888" strokeWidth={0.5} />
+        <Area
+          type="monotone"
+          dataKey="zscore"
+          stroke="none"
+          fill="#ff9900"
+          fillOpacity={0.15}
+        />
+        <Line
+          type="monotone"
+          dataKey="zscore"
+          stroke="#ff9900"
+          strokeWidth={1.5}
+          dot={false}
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }

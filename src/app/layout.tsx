@@ -1,19 +1,21 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "Hugo's Market Dashboard – Bloomberg-Style Stock Visualizer",
-  description: "A junior Bloomberg Terminal-style dashboard for stock analysis. Created by Hugo Canseco.",
-};
+  title: 'Bloomberg Jr. Terminal',
+  description: 'Financial Terminal - UC Berkeley Haas',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="bg-bloomberg-black text-white font-mono antialiased">
+        {children}
+      </body>
     </html>
-  );
+  )
 }

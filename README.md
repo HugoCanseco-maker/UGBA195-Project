@@ -1,98 +1,113 @@
-# Hugo's Market Dashboard – Bloomberg-Style Stock Visualizer
+# Bloomberg Jr. Financial Terminal
 
-A junior Bloomberg Terminal-style dashboard for stock analysis. Created by **Hugo Canseco**.
+A professional-grade financial terminal built with Next.js, Tailwind CSS, and Recharts. Features Bloomberg-style dark theme with comprehensive technical analysis tools.
 
 ## Features
 
-- **Watchlist sidebar** with ~50 tickers (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA, AMD, and more)
-- **Stats cards** showing current price, 1-week return, 1-year return, and rolling volatility
-- **15 indicator views**: Price, Volume, Moving Averages, RSI, Z-Score, Volatility, Bollinger Bands, MACD, Correlation matrix, Relative strength vs SPY, Drawdown, Beta, Cumulative return, Distance from 200-day MA, Volume spikes
-- **Select 1–5 stocks** at a time from the watchlist
-- **Generate Charts** button—click after selecting tickers to display the 5 charts
-- **Dark theme** Bloomberg-style UI
+- **50 Major Tickers**: AAPL, NVDA, TSLA, SPY, and more
+- **15 Financial Metrics**:
+  - Price Chart
+  - 50/200-Day Moving Averages
+  - RSI (14-Day) with overbought/oversold alerts
+  - MACD (12, 26, 9)
+  - Bollinger Bands (20-day)
+  - Rolling Volatility
+  - Z-Score (Mean Reversion)
+  - Distance from 200 MA
+  - Relative Strength vs SPY
+  - Cumulative Return vs SPY
+  - Drawdown Analysis
+  - Volume Analysis
+  - Volume Spikes
+  - Daily Price Change
+  - Rolling Beta
 
-## Data Pipeline
+## Tech Stack
 
-The app loads CSV files **client-side** from `public/data/` (e.g., `public/data/AAPL.csv`). Each file has columns: `ticker,date,open,high,low,close,volume`. No API routes—PapaParse parses CSVs in the browser. No live Yahoo Finance calls when deployed.
+- **Framework**: Next.js 14
+- **Styling**: Tailwind CSS
+- **Charts**: Recharts
+- **Language**: TypeScript
 
-### Option 1: Download real data (recommended)
+## Getting Started
 
-1. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Prerequisites
 
-2. Run the download script:
-   ```bash
-   python scripts/download_data.py
-   ```
+- Node.js 18+ 
+- npm or yarn
 
-   This downloads OHLCV data for all ~50 tickers from Yahoo Finance (2020–2026) and saves individual CSVs to `public/data/`.
-
-### Option 2: Generate sample data (offline / demo)
-
-If you're offline or Yahoo Finance is unavailable:
+### Installation
 
 ```bash
-python scripts/generate_sample_data.py
+# Install dependencies
+npm install
+
+# Generate sample stock data (50 tickers, 2 years of data)
+npm run generate-data
+
+# Start development server
+npm run dev
 ```
 
-This creates synthetic sample data in `public/data/` (50 individual CSVs) so the app works for demo purposes.
+Open [http://localhost:3000](http://localhost:3000) to view the terminal.
 
-## Running the app locally
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-3. Open [http://localhost:3000](http://localhost:3000)
-
-## Deployment (Vercel)
-
-1. Push the project to GitHub.
-
-2. Connect the repo to Vercel and deploy.
-
-3. **Important**: Ensure `public/data/` contains ticker CSVs before deploying. Either:
-   - Run `python scripts/download_data.py` locally and commit `public/data/*.csv`, or
-   - Run `python scripts/generate_sample_data.py` and commit the files.
-
-   The app loads CSVs client-side and does not make live Yahoo Finance API calls when deployed.
-
-## Project structure
+## Project Structure
 
 ```
-├── data/
-│   └── prices.csv          # OHLCV data (ticker, date, open, high, low, close, volume)
+├── public/
+│   └── data/           # CSV files for each ticker
 ├── scripts/
-│   ├── download_data.py    # Download real data via yfinance
-│   └── generate_sample_data.py  # Generate sample data (offline)
+│   └── generateData.ts # Stock data generator
 ├── src/
 │   ├── app/
-│   │   ├── api/prices/     # API route serving CSV data
-│   │   ├── layout.tsx
-│   │   └── page.tsx
+│   │   ├── globals.css # Global styles
+│   │   ├── layout.tsx  # Root layout
+│   │   └── page.tsx    # Main terminal page
 │   ├── components/
-│   │   ├── charts/         # 15 indicator chart components
+│   │   ├── charts/     # 15 chart components
+│   │   ├── ChartGrid.tsx
 │   │   ├── ChartPanel.tsx
-│   │   ├── InfoBox.tsx
-│   │   ├── StatsCards.tsx
-│   │   └── Watchlist.tsx
-│   ├── lib/data.ts         # Data utilities (MA, RSI, etc.)
-│   └── types/index.ts
-└── package.json
+│   │   ├── Sidebar.tsx
+│   │   └── TopBar.tsx
+│   ├── lib/
+│   │   ├── csvParser.ts    # Yahoo Finance CSV parser
+│   │   └── financeMath.ts  # Financial calculations
+│   └── types/
+│       └── index.ts    # TypeScript definitions
+└── tailwind.config.ts
 ```
 
-## Tech stack
+## Visual Design
 
-- Next.js 14+ (App Router)
-- React 18
-- TypeScript
-- Tailwind CSS
-- Recharts
+- **Background**: Pure Black (#000000)
+- **Cards/Sidebar**: Dark Zinc (#09090b)
+- **Accent**: Bloomberg Orange (#ff9900)
+- **Positive Data**: Terminal Green (#00ff00)
+- **Negative Data**: Red (#ff4444)
+- **Font**: JetBrains Mono (monospace)
+
+## Financial Math Engine
+
+All calculations are performed client-side for performance:
+
+- **SMA/EMA**: Simple and Exponential Moving Averages
+- **RSI**: Relative Strength Index with Wilder smoothing
+- **MACD**: Moving Average Convergence Divergence
+- **Bollinger Bands**: 2 standard deviation bands
+- **Beta**: 60-day rolling covariance/variance
+- **Volatility**: Annualized rolling standard deviation
+
+## Usage
+
+1. Select a ticker from the dropdown
+2. Check the metrics you want to analyze
+3. Click **GENERATE** to render the charts
+4. Charts display in a responsive 2-column grid
+
+## Author
+
+Hugo Canseco - UC Berkeley Haas
+
+## License
+
+MIT

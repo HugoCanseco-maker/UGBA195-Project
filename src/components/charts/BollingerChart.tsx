@@ -1,54 +1,119 @@
-"use client";
+'use client';
 
+import { BollingerData } from '@/types';
 import {
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   ComposedChart,
-} from "recharts";
-import { PriceRow } from "@/types";
-import { computeBollinger } from "@/lib/data";
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
+interface BollingerChartProps {
+  data: BollingerData[];
 }
 
-export function BollingerChart({ selectedTickers, tickerData }: Props) {
-  const ticker = selectedTickers[0];
-  if (!ticker) return null;
-
-  const rows = tickerData[ticker] ?? [];
-  const { upper, middle, lower } = computeBollinger(rows, 20, 2);
-
-  const data = rows.map((r, i) => ({
-    date: r.date,
-    close: r.close,
-    upper: isNaN(upper[i]) ? undefined : upper[i],
-    middle: isNaN(middle[i]) ? undefined : middle[i],
-    lower: isNaN(lower[i]) ? undefined : lower[i],
+export default function BollingerChart({ data }: BollingerChartProps) {
+  // Use full 1-year dataset
+  const chartData = data.map(d => ({
+    date: d.date,
+    close: d.close,
+    upper: d.upper,
+    middle: d.middle,
+    lower: d.lower,
+    band: [d.lower, d.upper],
   }));
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatPrice = (value: number) => `$${value.toFixed(2)}`;
+
   return (
-    <div className="h-[400px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data.slice(-252)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 10 }} />
-          <YAxis stroke="#666" tick={{ fontSize: 10 }} />
-          <Tooltip contentStyle={{ background: "#242424", border: "1px solid #333" }} />
-          <Line type="monotone" dataKey="close" stroke="#00aaff" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="middle" stroke="#ffaa00" strokeWidth={1} strokeDasharray="3 3" dot={false} />
-          <Line type="monotone" dataKey="upper" stroke="#666" strokeWidth={1} dot={false} />
-          <Line type="monotone" dataKey="lower" stroke="#666" strokeWidth={1} dot={false} />
-        </ComposedChart>
-      </ResponsiveContainer>
-      <p className="text-xs text-bloomberg-muted mt-2">
-        Bollinger Bands (20, 2) • {ticker}
-      </p>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tickFormatter={formatPrice}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={['auto', 'auto']}
+          width={60}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number, name: string) => [
+            formatPrice(value),
+            name === 'close' ? 'Price' : name === 'upper' ? 'Upper Band' : name === 'lower' ? 'Lower Band' : 'Middle'
+          ]}
+          labelFormatter={formatDate}
+        />
+        <Area
+          type="monotone"
+          dataKey="upper"
+          stroke="none"
+          fill="#ff9900"
+          fillOpacity={0.1}
+        />
+        <Area
+          type="monotone"
+          dataKey="lower"
+          stroke="none"
+          fill="#000000"
+          fillOpacity={1}
+        />
+        <Line
+          type="monotone"
+          dataKey="upper"
+          stroke="#ff9900"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="middle"
+          stroke="#888888"
+          strokeWidth={1}
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="lower"
+          stroke="#ff9900"
+          strokeWidth={1}
+          strokeDasharray="3 3"
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="close"
+          stroke="#00ff00"
+          strokeWidth={1.5}
+          dot={false}
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }

@@ -1,83 +1,79 @@
-"use client";
+'use client';
 
+import { IndicatorData } from '@/types';
 import {
-  BarChart,
+  ResponsiveContainer,
+  ComposedChart,
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { PriceRow } from "@/types";
+  CartesianGrid,
+  ReferenceLine,
+  Cell,
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
+interface VolumeSpikesChartProps {
+  data: IndicatorData[];
 }
 
-function computeVolumeSpikes(rows: PriceRow[], period: number = 20, threshold: number = 2): { date: string; ratio: number; volume: number }[] {
-  const result: { date: string; ratio: number; volume: number }[] = [];
-  for (let i = period; i < rows.length; i++) {
-    const vol = rows[i].volume;
-    const avgVol =
-      rows
-        .slice(i - period, i)
-        .reduce((s, r) => s + r.volume, 0) / period;
-    const ratio = avgVol > 0 ? vol / avgVol : 0;
-    if (ratio >= threshold) {
-      result.push({ date: rows[i].date, ratio, volume: vol });
-    }
-  }
-  return result;
-}
-
-export function VolumeSpikesChart({ selectedTickers, tickerData }: Props) {
-  const ticker = selectedTickers[0];
-  if (!ticker) return null;
-
-  const rows = tickerData[ticker] ?? [];
-  const spikes = computeVolumeSpikes(rows, 20, 2);
-
-  const data = spikes.slice(-50).map((s) => ({
-    date: s.date,
-    ratio: s.ratio,
-    volume: s.volume,
+export default function VolumeSpikesChart({ data }: VolumeSpikesChartProps) {
+  // Use full 1-year dataset
+  const chartData = data.map(d => ({
+    date: d.date,
+    ratio: d.value,
+    isSpike: d.isSpike,
   }));
 
-  const volumeFormatter = (value: number, name: string, props: { payload?: { volume?: number } }) => {
-    const vol = props?.payload?.volume;
-    if (vol == null) {
-      return [value != null ? `${value.toFixed(2)}× avg` : "0", "Ratio"];
-    }
-    return [`${(value ?? 0).toFixed(2)}× avg (${(vol / 1e6).toFixed(2)}M vol)`, "Ratio"];
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  if (data.length === 0) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-bloomberg-muted">
-        No volume spikes (≥2× avg) in recent period for {ticker}
-      </div>
-    );
-  }
-
   return (
-    <div className="h-[400px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 10 }} />
-          <YAxis stroke="#666" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v.toFixed(1)}×`} />
-          <Tooltip
-            contentStyle={{ background: "#242424", border: "1px solid #333" }}
-            formatter={volumeFormatter}
-          />
-          <Bar dataKey="ratio" fill="#ffaa00" radius={[2, 2, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-      <p className="text-xs text-bloomberg-muted mt-2">
-        Volume spikes • {ticker} • Days with volume ≥2× 20-day avg
-      </p>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={[0, 'auto']}
+          width={35}
+          tickFormatter={(v) => `${v.toFixed(1)}x`}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number) => [`${value.toFixed(2)}x`, 'Vol/Avg']}
+          labelFormatter={formatDate}
+        />
+        <ReferenceLine y={2} stroke="#ff4444" strokeDasharray="5 5" strokeWidth={1} label={{ value: '2x', fill: '#ff4444', fontSize: 10 }} />
+        <ReferenceLine y={1} stroke="#888888" strokeWidth={0.5} />
+        <Bar dataKey="ratio" radius={[2, 2, 0, 0]}>
+          {chartData.map((entry, index) => (
+            <Cell 
+              key={`cell-${index}`} 
+              fill={entry.isSpike ? '#ff9900' : '#888888'} 
+              fillOpacity={entry.isSpike ? 0.9 : 0.4}
+            />
+          ))}
+        </Bar>
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }

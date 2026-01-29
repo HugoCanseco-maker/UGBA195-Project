@@ -1,32 +1,28 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        bloomberg: {
-          black: "#0d0d0d",
-          dark: "#1a1a1a",
-          panel: "#242424",
-          border: "#333333",
-          muted: "#666666",
-          green: "#00ff88",
-          red: "#ff4444",
-          amber: "#ffaa00",
-          blue: "#00aaff",
-        },
+        'bloomberg-black': '#000000',
+        'bloomberg-zinc': '#09090b',
+        'bloomberg-orange': '#ff9900',
+        'bloomberg-green': '#00ff00',
+        'bloomberg-red': '#ff4444',
+        'bloomberg-gray': '#888888',
+        'bloomberg-dark-gray': '#1a1a1a',
       },
       fontFamily: {
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+        mono: ['JetBrains Mono', 'Roboto Mono', 'monospace'],
       },
     },
   },
   plugins: [],
-};
+}
 
-export default config;
+export default config

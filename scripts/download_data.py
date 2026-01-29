@@ -1,88 +1,166 @@
 #!/usr/bin/env python3
 """
-Download historical OHLCV data for ~50 tickers using yfinance.
-Saves data to data/ folder as one consolidated CSV (data/prices.csv).
-Run: python scripts/download_data.py
+Download historical stock data for 50 tickers using yfinance.
+Data range: January 29, 2025 to January 29, 2026
+Saves individual CSV files to ./public/data/
 """
 
 import os
-import pandas as pd
 import yfinance as yf
+import pandas as pd
 from datetime import datetime
 
-# Top ~50 tickers - realistic market coverage
+# 50 tickers to download
 TICKERS = [
-    "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "AMD", "MU", "PLTR",
-    "HOOD", "COIN", "JPM", "GS", "JNJ", "WMT", "PG", "V", "MA", "AXP",
-    "XOM", "CVX", "BRK-B", "UNH", "PFE", "ABBV", "MRK", "BA", "LMT", "CAT",
-    "MMM", "GE", "CSCO", "INTC", "IBM", "ORCL", "SNOW", "CRM", "DIS", "NFLX",
-    "PYPL", "ADBE", "AVGO", "QCOM", "TXN", "AMAT", "LRCX", "KLAC", "NOW", "SPY",
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'PLTR', 'MU', 'AVGO',
+    'NFLX', 'AMD', 'JPM', 'V', 'MA', 'GS', 'MS', 'PYPL', 'CRM', 'ORCL',
+    'ADBE', 'INTC', 'QCOM', 'AMAT', 'LRCX', 'NOW', 'PANW', 'SNOW', 'UBER', 'ABNB',
+    'COIN', 'HOOD', 'SQ', 'SHOP', 'TSM', 'ASML', 'COST', 'WMT', 'TGT', 'DIS',
+    'NKE', 'SBUX', 'F', 'GM', 'JNJ', 'PFE', 'UNH', 'CVX', 'XOM', 'SPY'
 ]
 
-# Date range: 2020 to Jan 2026
-START_DATE = "2020-01-01"
-END_DATE = "2026-01-28"
+# Date range
+START_DATE = '2025-01-29'
+END_DATE = '2026-01-29'
+
+# Output directory (relative to project root)
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', 'data')
 
 
-def download_data():
-    """Download OHLCV data for all tickers and save to CSV."""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    data_dir = os.path.join(project_root, "data")
-    os.makedirs(data_dir, exist_ok=True)
-
-    print(f"Downloading data for {len(TICKERS)} tickers...")
-    print(f"Period: {START_DATE} to {END_DATE}")
-
-    all_data = []
-
-    for ticker in TICKERS:
-        try:
-            stock = yf.Ticker(ticker)
-            df = stock.history(start=START_DATE, end=END_DATE)
-
-            if df.empty or len(df) < 10:
-                print(f"  ⚠ {ticker}: insufficient data, skipping")
-                continue
-
-            df = df.reset_index()
-            df["ticker"] = ticker
-            df = df.rename(columns={
-                "Date": "date",
-                "Open": "open",
-                "High": "high",
-                "Low": "low",
-                "Close": "close",
-                "Volume": "volume",
-            })
-            df = df[["ticker", "date", "open", "high", "low", "close", "volume"]]
-            df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-
-            all_data.append(df)
-            print(f"  ✓ {ticker}: {len(df)} rows")
-
-        except Exception as e:
-            print(f"  ✗ {ticker}: {e}")
-
-    if not all_data:
-        print("No data downloaded. Exiting.")
-        return
-
-    combined = pd.concat(all_data, ignore_index=True)
-    output_path = os.path.join(data_dir, "prices.csv")
-    combined.to_csv(output_path, index=False)
-    print(f"\nSaved {len(combined)} rows to {output_path}")
-
-    # Save individual CSVs to public/data/ for client-side fetch(/data/AAPL.csv)
-    public_data_dir = os.path.join(project_root, "public", "data")
-    os.makedirs(public_data_dir, exist_ok=True)
-    for ticker in TICKERS:
-        ticker_df = combined[combined["ticker"] == ticker]
-        if not ticker_df.empty:
-            ticker_path = os.path.join(public_data_dir, f"{ticker.replace('-', '_')}.csv")
-            ticker_df.to_csv(ticker_path, index=False)
-    print(f"Saved individual CSVs to public/data/")
+def download_ticker_data(ticker: str) -> pd.DataFrame | None:
+    """
+    Download historical data for a single ticker.
+    
+    Args:
+        ticker: Stock ticker symbol
+        
+    Returns:
+        DataFrame with OHLCV data or None if download fails
+    """
+    try:
+        stock = yf.Ticker(ticker)
+        df = stock.history(start=START_DATE, end=END_DATE, auto_adjust=False)
+        
+        if df.empty:
+            print(f"  ⚠️  No data returned for {ticker}")
+            return None
+            
+        return df
+    except Exception as e:
+        print(f"  ❌ Error downloading {ticker}: {e}")
+        return None
 
 
-if __name__ == "__main__":
-    download_data()
+def clean_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean the downloaded data:
+    - Forward-fill missing values
+    - Round prices to 2 decimal places
+    - Format for Yahoo Finance CSV compatibility
+    
+    Args:
+        df: Raw DataFrame from yfinance
+        
+    Returns:
+        Cleaned DataFrame
+    """
+    # Forward-fill any missing values
+    df = df.ffill()
+    
+    # Select and rename columns to match Yahoo Finance format
+    df = df[['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']].copy()
+    
+    # Round price columns to 2 decimal places
+    price_columns = ['Open', 'High', 'Low', 'Close', 'Adj Close']
+    for col in price_columns:
+        df[col] = df[col].round(2)
+    
+    # Ensure volume is integer
+    df['Volume'] = df['Volume'].astype(int)
+    
+    # Reset index to get Date as a column
+    df = df.reset_index()
+    
+    # Format date as YYYY-MM-DD string
+    df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
+    
+    return df
+
+
+def save_to_csv(df: pd.DataFrame, ticker: str, output_dir: str) -> bool:
+    """
+    Save DataFrame to CSV file.
+    
+    Args:
+        df: Cleaned DataFrame
+        ticker: Ticker symbol for filename
+        output_dir: Directory to save the file
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        filepath = os.path.join(output_dir, f'{ticker}.csv')
+        df.to_csv(filepath, index=False)
+        return True
+    except Exception as e:
+        print(f"  ❌ Error saving {ticker}: {e}")
+        return False
+
+
+def main():
+    """Main function to download all ticker data."""
+    print("=" * 60)
+    print("Bloomberg Jr. Terminal - Data Downloader")
+    print("=" * 60)
+    print(f"\nDate Range: {START_DATE} to {END_DATE}")
+    print(f"Tickers: {len(TICKERS)}")
+    print(f"Output: {OUTPUT_DIR}\n")
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    print(f"✓ Output directory ready: {OUTPUT_DIR}\n")
+    
+    # Track results
+    success_count = 0
+    failed_tickers = []
+    
+    print("Downloading data...\n")
+    
+    for i, ticker in enumerate(TICKERS, 1):
+        print(f"[{i:02d}/{len(TICKERS)}] {ticker}...", end=" ")
+        
+        # Download data
+        df = download_ticker_data(ticker)
+        
+        if df is None:
+            failed_tickers.append(ticker)
+            continue
+        
+        # Clean data
+        df = clean_data(df)
+        
+        # Save to CSV
+        if save_to_csv(df, ticker, OUTPUT_DIR):
+            trading_days = len(df)
+            date_range = f"{df['Date'].iloc[0]} to {df['Date'].iloc[-1]}"
+            print(f"✓ {trading_days} days ({date_range})")
+            success_count += 1
+        else:
+            failed_tickers.append(ticker)
+    
+    # Print summary
+    print("\n" + "=" * 60)
+    print("DOWNLOAD COMPLETE")
+    print("=" * 60)
+    print(f"\n✓ Successfully downloaded: {success_count}/{len(TICKERS)} tickers")
+    
+    if failed_tickers:
+        print(f"✗ Failed: {', '.join(failed_tickers)}")
+    
+    print(f"\n📁 Data saved to: {OUTPUT_DIR}")
+    print("\nYou can now run the Next.js app to visualize the data!")
+
+
+if __name__ == '__main__':
+    main()

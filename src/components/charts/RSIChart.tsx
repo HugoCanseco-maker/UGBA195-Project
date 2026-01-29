@@ -1,62 +1,85 @@
-"use client";
+'use client';
 
+import { IndicatorData } from '@/types';
 import {
-  LineChart,
+  ResponsiveContainer,
+  ComposedChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
   ReferenceLine,
-} from "recharts";
-import { PriceRow } from "@/types";
-import { computeRSI } from "@/lib/data";
+  Area,
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
-  compact?: boolean;
+interface RSIChartProps {
+  data: IndicatorData[];
 }
 
-export function RSIChart({ selectedTickers, tickerData, compact }: Props) {
-  const ticker = selectedTickers[0];
-  if (!ticker) return null;
-
-  const rows = tickerData[ticker] ?? [];
-  const rsi = computeRSI(rows, 14);
-
-  const data = rows.map((r, i) => ({
-    date: r.date,
-    rsi: isNaN(rsi[i]) ? undefined : rsi[i],
+export default function RSIChart({ data }: RSIChartProps) {
+  // Use full 1-year dataset
+  const chartData = data.map(d => ({
+    date: d.date,
+    rsi: d.value,
   }));
 
-  if (data.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center text-bloomberg-muted text-xs">
-        No data for {ticker}
-      </div>
-    );
-  }
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
-    <div className={compact ? "h-full min-h-[180px]" : "h-[400px] w-full"}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="2 2" stroke="#333" />
-          <XAxis
-            dataKey="date"
-            stroke="#666"
-            tick={{ fontSize: compact ? 8 : 10 }}
-            tickFormatter={(v) => (v ? String(v).slice(5) : "")}
-          />
-          <YAxis stroke="#666" tick={{ fontSize: compact ? 8 : 10 }} domain={[0, 100]} width={compact ? 28 : 40} />
-          <Tooltip contentStyle={{ background: "#242424", border: "1px solid #333", fontSize: 11 }} />
-          <ReferenceLine y={70} stroke="#ff4444" strokeDasharray="2 2" />
-          <ReferenceLine y={30} stroke="#00ff88" strokeDasharray="2 2" />
-          <Line type="monotone" dataKey="rsi" stroke="#00aaff" strokeWidth={compact ? 1.5 : 2} dot={false} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          domain={[0, 100]}
+          ticks={[0, 30, 50, 70, 100]}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          width={35}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number) => [value.toFixed(1), 'RSI']}
+          labelFormatter={formatDate}
+        />
+        <ReferenceLine y={70} stroke="#ff4444" strokeDasharray="5 5" strokeWidth={1} />
+        <ReferenceLine y={30} stroke="#00ff00" strokeDasharray="5 5" strokeWidth={1} />
+        <ReferenceLine y={50} stroke="#888888" strokeDasharray="3 3" strokeWidth={0.5} />
+        <Area
+          type="monotone"
+          dataKey="rsi"
+          stroke="none"
+          fill="#ff9900"
+          fillOpacity={0.1}
+        />
+        <Line
+          type="monotone"
+          dataKey="rsi"
+          stroke="#ff9900"
+          strokeWidth={1.5}
+          dot={false}
+          activeDot={{ r: 4, fill: '#ff9900' }}
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }

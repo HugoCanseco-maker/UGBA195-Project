@@ -1,54 +1,73 @@
-"use client";
+'use client';
 
+import { VolatilityData } from '@/types';
 import {
-  LineChart,
-  Line,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { PriceRow } from "@/types";
-import { computeStdDev } from "@/lib/data";
+  CartesianGrid,
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
+interface VolatilityChartProps {
+  data: VolatilityData[];
 }
 
-export function VolatilityChart({ selectedTickers, tickerData }: Props) {
-  const ticker = selectedTickers[0];
-  if (!ticker) return null;
-
-  const rows = tickerData[ticker] ?? [];
-  const std = computeStdDev(rows, 21);
-  const annualized = std.map((s, i) =>
-    isNaN(s) || !rows[i]?.close ? undefined : (s / rows[i].close) * Math.sqrt(252) * 100
-  );
-
-  const data = rows.map((r, i) => ({
-    date: r.date,
-    vol: annualized[i],
+export default function VolatilityChart({ data }: VolatilityChartProps) {
+  // Use full 1-year dataset
+  const chartData = data.map(d => ({
+    date: d.date,
+    volatility: d.volatility,
   }));
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   return (
-    <div className="h-[400px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data.slice(-252)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 10 }} />
-          <YAxis stroke="#666" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
-          <Tooltip
-            contentStyle={{ background: "#242424", border: "1px solid #333" }}
-            formatter={(v: number) => [v?.toFixed(2) + "%", "Volatility"]}
-          />
-          <Line type="monotone" dataKey="vol" stroke="#ffaa00" strokeWidth={2} dot={false} />
-        </LineChart>
-      </ResponsiveContainer>
-      <p className="text-xs text-bloomberg-muted mt-2">
-        Rolling 21-day volatility (annualized) • {ticker}
-      </p>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={[0, 'auto']}
+          width={40}
+          tickFormatter={(v) => `${v.toFixed(0)}%`}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number) => [`${value.toFixed(2)}%`, 'Volatility (Ann.)']}
+          labelFormatter={formatDate}
+        />
+        <Area
+          type="monotone"
+          dataKey="volatility"
+          stroke="#ff9900"
+          strokeWidth={1.5}
+          fill="#ff9900"
+          fillOpacity={0.2}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }

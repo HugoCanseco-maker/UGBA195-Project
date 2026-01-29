@@ -1,93 +1,74 @@
-"use client";
+'use client';
 
+import { RelativeStrengthData } from '@/types';
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import { PriceRow } from "@/types";
+  CartesianGrid,
+  ReferenceLine,
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
+interface RelativeStrengthChartProps {
+  data: RelativeStrengthData[];
 }
 
-export function RelativeStrengthChart({ selectedTickers, tickerData }: Props) {
-  const spyRows = tickerData["SPY"] ?? [];
-  const tickers = selectedTickers.filter((t) => t !== "SPY").slice(0, 5);
-  if (spyRows.length === 0 || tickers.length === 0) {
-    return (
-      <div className="h-[400px] flex items-center justify-center text-bloomberg-muted text-sm">
-        {spyRows.length === 0
-          ? "SPY data required for relative strength. Add SPY to data."
-          : "Select at least one non-SPY ticker for relative strength vs SPY."}
-      </div>
-    );
-  }
+export default function RelativeStrengthChart({ data }: RelativeStrengthChartProps) {
+  // Use full 1-year dataset - dates are pre-aligned with SPY
+  const chartData = data.map(d => ({
+    date: d.date,
+    relativeStrength: d.relativeStrength,
+  }));
 
-  const dataByDate = new Map<string, number>();
-  spyRows.forEach((r) => dataByDate.set(r.date, r.close));
-
-  const series: Record<string, number[]> = {};
-
-  tickers.forEach((ticker) => {
-    const rows = tickerData[ticker] ?? [];
-    const ratios: { date: string; value: number }[] = [];
-    rows.forEach((r) => {
-      const spy = dataByDate.get(r.date);
-      if (spy && spy > 0) {
-        ratios.push({ date: r.date, value: (r.close / spy) * 100 });
-      }
-    });
-    series[ticker] = ratios.map((x) => x.value);
-  });
-
-  const dates = tickers.length > 0
-    ? (tickerData[tickers[0]] ?? [])
-        .filter((r) => dataByDate.has(r.date))
-        .map((r) => r.date)
-    : [];
-
-  const data = dates.map((date, i) => {
-    const obj: Record<string, string | number> = { date };
-    tickers.forEach((t) => {
-      const tickerRows = tickerData[t] ?? [];
-      const r = tickerRows.find((x) => x.date === date);
-      const spy = dataByDate.get(date);
-      if (r && spy && spy > 0) obj[t] = (r.close / spy) * 100;
-    });
-    return obj;
-  });
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
-    <div className="h-[400px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data.slice(-252)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 10 }} />
-          <YAxis stroke="#666" tick={{ fontSize: 10 }} domain={["auto", "auto"]} />
-          <Tooltip contentStyle={{ background: "#242424", border: "1px solid #333" }} />
-          <Legend />
-          {tickers.map((t, i) => (
-            <Line
-              key={t}
-              type="monotone"
-              dataKey={t}
-              stroke={["#00aaff", "#00ff88", "#ffaa00", "#ff4444", "#aa44ff"][i % 5]}
-              strokeWidth={1.5}
-              dot={false}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-      <p className="text-xs text-bloomberg-muted mt-2">
-        Relative strength vs SPY (ratio × 100) • Rising = outperforming
-      </p>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={['auto', 'auto']}
+          width={45}
+          tickFormatter={(v) => v.toFixed(0)}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number) => [value.toFixed(2), 'Relative Strength']}
+          labelFormatter={formatDate}
+        />
+        <ReferenceLine y={100} stroke="#888888" strokeDasharray="3 3" strokeWidth={1} />
+        <Line
+          type="monotone"
+          dataKey="relativeStrength"
+          stroke="#00ff00"
+          strokeWidth={1.5}
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }

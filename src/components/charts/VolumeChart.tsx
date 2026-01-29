@@ -1,65 +1,90 @@
-"use client";
+'use client';
 
+import { VolumeData } from '@/types';
 import {
-  BarChart,
+  ResponsiveContainer,
+  ComposedChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { PriceRow } from "@/types";
+  CartesianGrid,
+  Legend,
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
-  compact?: boolean;
+interface VolumeChartProps {
+  data: VolumeData[];
 }
 
-export function VolumeChart({ selectedTickers, tickerData, compact }: Props) {
-  const ticker = selectedTickers[0];
-  if (!ticker) return null;
-
-  const rows = tickerData[ticker] ?? [];
-  const data = rows.map((r) => ({
-    date: r.date,
-    volume: r.volume,
-    fill: r.close >= r.open ? "#00ff8833" : "#ff444433",
+export default function VolumeChart({ data }: VolumeChartProps) {
+  // Use full 1-year dataset
+  const chartData = data.map(d => ({
+    date: d.date,
+    volume: d.volume / 1000000, // Convert to millions
+    avgVolume: (d.avgVolume ?? 0) / 1000000,
   }));
 
-  if (data.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center text-bloomberg-muted text-xs">
-        No data for {ticker}
-      </div>
-    );
-  }
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatVolume = (value: number) => `${value.toFixed(1)}M`;
 
   return (
-    <div className={compact ? "h-full min-h-[180px]" : "h-[400px] w-full"}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="2 2" stroke="#333" />
-          <XAxis
-            dataKey="date"
-            stroke="#666"
-            tick={{ fontSize: compact ? 8 : 10 }}
-            tickFormatter={(v) => (v ? String(v).slice(5) : "")}
-          />
-          <YAxis
-            stroke="#666"
-            tick={{ fontSize: compact ? 8 : 10 }}
-            width={compact ? 36 : 50}
-            tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`}
-          />
-          <Tooltip
-            contentStyle={{ background: "#242424", border: "1px solid #333", fontSize: 11 }}
-            formatter={(v: number) => [(v / 1e6).toFixed(2) + "M", "Volume"]}
-          />
-          <Bar dataKey="volume" fill="#00aaff" radius={[2, 2, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tickFormatter={formatVolume}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={[0, 'auto']}
+          width={50}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number, name: string) => [
+            formatVolume(value),
+            name === 'volume' ? 'Volume' : '20-Day Avg'
+          ]}
+          labelFormatter={formatDate}
+        />
+        <Legend 
+          wrapperStyle={{ fontSize: '10px' }}
+          formatter={(value) => value === 'volume' ? 'Volume' : '20-Day Avg'}
+        />
+        <Bar
+          dataKey="volume"
+          fill="#888888"
+          opacity={0.6}
+          radius={[2, 2, 0, 0]}
+        />
+        <Line
+          type="monotone"
+          dataKey="avgVolume"
+          stroke="#ff9900"
+          strokeWidth={2}
+          dot={false}
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }

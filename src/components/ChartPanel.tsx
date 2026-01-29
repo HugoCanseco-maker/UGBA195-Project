@@ -1,73 +1,41 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { PriceRow, IndicatorTab } from "@/types";
-import { IndicatorCharts } from "./charts/IndicatorCharts";
-import { InfoBox } from "./InfoBox";
-import clsx from "clsx";
-
-const TABS: { id: IndicatorTab; label: string }[] = [
-  { id: "price", label: "Price" },
-  { id: "volume", label: "Volume" },
-  { id: "moving-averages", label: "MA 50/200" },
-  { id: "rsi", label: "RSI" },
-  { id: "zscore", label: "Z-Score" },
-  { id: "volatility", label: "Volatility" },
-  { id: "bollinger", label: "Bollinger" },
-  { id: "macd", label: "MACD" },
-  { id: "correlation", label: "Correlation" },
-  { id: "relative-strength", label: "vs SPY" },
-  { id: "drawdown", label: "Drawdown" },
-  { id: "beta", label: "Beta" },
-  { id: "cumulative-return", label: "Cum Return" },
-  { id: "distance-200ma", label: "Dist 200MA" },
-  { id: "volume-spikes", label: "Vol Spikes" },
-];
+import { ReactNode } from 'react';
 
 interface ChartPanelProps {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
+  title: string;
+  description: string;
+  children: ReactNode;
+  alertCondition?: boolean;
+  alertText?: string;
 }
 
-export function ChartPanel({ selectedTickers, tickerData }: ChartPanelProps) {
-  const [activeTab, setActiveTab] = useState<IndicatorTab>("price");
-
+export default function ChartPanel({
+  title,
+  description,
+  children,
+  alertCondition = false,
+  alertText,
+}: ChartPanelProps) {
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      {/* Tab bar */}
-      <div className="flex overflow-x-auto border-b border-bloomberg-border bg-bloomberg-dark px-2 gap-0.5">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={clsx(
-              "px-3 py-2 text-xs font-mono whitespace-nowrap transition-colors",
-              activeTab === tab.id
-                ? "bg-bloomberg-amber/20 text-bloomberg-amber border-b-2 border-bloomberg-amber"
-                : "text-bloomberg-muted hover:text-gray-300"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <div className="chart-panel bg-bloomberg-zinc rounded-lg border border-bloomberg-dark-gray overflow-hidden">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-bloomberg-dark-gray">
+        <h3 className="text-bloomberg-orange font-semibold text-sm tracking-wide">
+          {title}
+        </h3>
       </div>
-
-      {/* Chart area */}
-      <div className="flex-1 flex min-h-0">
-        <div className="flex-1 min-w-0 p-4 overflow-auto">
-          {selectedTickers.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-bloomberg-muted text-sm">
-              Select 1–5 tickers from the watchlist to view charts
-            </div>
-          ) : (
-            <IndicatorCharts
-              tab={activeTab}
-              selectedTickers={selectedTickers}
-              tickerData={tickerData}
-            />
-          )}
-        </div>
-        <InfoBox activeTab={activeTab} />
+      
+      {/* Chart Area */}
+      <div className="p-4 h-64">
+        {children}
+      </div>
+      
+      {/* Footer Blurb */}
+      <div className="px-4 py-3 border-t border-bloomberg-dark-gray bg-bloomberg-black/30">
+        <p className={`text-xs leading-relaxed ${alertCondition ? 'text-bloomberg-red font-semibold' : 'text-bloomberg-gray'}`}>
+          {alertCondition && alertText ? alertText : description}
+        </p>
       </div>
     </div>
   );

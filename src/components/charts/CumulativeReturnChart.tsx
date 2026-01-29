@@ -1,81 +1,90 @@
-"use client";
+'use client';
 
+import { CumulativeReturnData } from '@/types';
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
   Legend,
   ReferenceLine,
-} from "recharts";
-import { PriceRow } from "@/types";
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
+interface CumulativeReturnChartProps {
+  data: CumulativeReturnData[];
+  ticker: string;
 }
 
-function computeCumulativeReturn(rows: PriceRow[]): number[] {
-  const result: number[] = [];
-  const start = rows[0]?.close ?? 1;
-  for (let i = 0; i < rows.length; i++) {
-    result.push(((rows[i].close - start) / start) * 100);
-  }
-  return result;
-}
-
-export function CumulativeReturnChart({ selectedTickers, tickerData }: Props) {
-  const tickers = selectedTickers.slice(0, 5);
-  if (tickers.length === 0) return null;
-
-  const colors = ["#00aaff", "#00ff88", "#ffaa00", "#ff4444", "#aa44ff"];
-
-  const dataByTicker = tickers.map((t) => ({
-    ticker: t,
-    rows: tickerData[t] ?? [],
+export default function CumulativeReturnChart({ data, ticker }: CumulativeReturnChartProps) {
+  const chartData = data.map(d => ({
+    date: d.date,
+    stock: d.stockReturn,
+    spy: d.spyReturn,
   }));
 
-  const dates = dataByTicker[0]?.rows.map((r) => r.date) ?? [];
-  const data = dates.map((date, i) => {
-    const obj: Record<string, string | number> = { date };
-    dataByTicker.forEach(({ ticker, rows }) => {
-      const cum = computeCumulativeReturn(rows);
-      if (cum[i] !== undefined) obj[ticker] = cum[i];
-    });
-    return obj;
-  });
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
-    <div className="h-[400px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data.slice(-252)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 10 }} />
-          <YAxis stroke="#666" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
-          <Tooltip
-            contentStyle={{ background: "#242424", border: "1px solid #333" }}
-            formatter={(v: number) => [v?.toFixed(2) + "%", "Cum Return"]}
-          />
-          <ReferenceLine y={0} stroke="#666" strokeDasharray="1 1" />
-          <Legend />
-          {tickers.map((t, i) => (
-            <Line
-              key={t}
-              type="monotone"
-              dataKey={t}
-              stroke={colors[i % 5]}
-              strokeWidth={2}
-              dot={false}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-      <p className="text-xs text-bloomberg-muted mt-2">
-        Cumulative return from period start • vs benchmark
-      </p>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={['auto', 'auto']}
+          width={50}
+          tickFormatter={(v) => `${v.toFixed(0)}%`}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number, name: string) => [
+            `${value.toFixed(2)}%`,
+            name === 'stock' ? ticker : 'SPY'
+          ]}
+          labelFormatter={formatDate}
+        />
+        <Legend 
+          wrapperStyle={{ fontSize: '10px' }}
+          formatter={(value) => value === 'stock' ? ticker : 'SPY'}
+        />
+        <ReferenceLine y={0} stroke="#888888" strokeWidth={0.5} />
+        <Line
+          type="monotone"
+          dataKey="stock"
+          stroke="#00ff00"
+          strokeWidth={1.5}
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="spy"
+          stroke="#ff9900"
+          strokeWidth={1.5}
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }

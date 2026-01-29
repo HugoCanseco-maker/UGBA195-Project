@@ -1,81 +1,77 @@
-"use client";
+'use client';
 
+import { DrawdownData } from '@/types';
 import {
+  ResponsiveContainer,
   AreaChart,
   Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
   ReferenceLine,
-} from "recharts";
-import { PriceRow } from "@/types";
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
+interface DrawdownChartProps {
+  data: DrawdownData[];
 }
 
-function computeDrawdown(rows: PriceRow[]): number[] {
-  const result: number[] = [];
-  let peak = rows[0]?.close ?? 0;
-  for (let i = 0; i < rows.length; i++) {
-    const close = rows[i].close;
-    if (close > peak) peak = close;
-    result.push(peak > 0 ? ((close - peak) / peak) * 100 : 0);
-  }
-  return result;
-}
-
-export function DrawdownChart({ selectedTickers, tickerData }: Props) {
-  const tickers = selectedTickers.slice(0, 5);
-  if (tickers.length === 0) return null;
-
-  const colors = ["#ff4444", "#ffaa00", "#00aaff", "#00ff88", "#aa44ff"];
-
-  const dataByTicker = tickers.map((t) => ({
-    ticker: t,
-    rows: tickerData[t] ?? [],
+export default function DrawdownChart({ data }: DrawdownChartProps) {
+  const chartData = data.map(d => ({
+    date: d.date,
+    drawdown: d.drawdown,
   }));
 
-  const dates = dataByTicker[0]?.rows.map((r) => r.date) ?? [];
-  const data = dates.map((date, i) => {
-    const obj: Record<string, string | number> = { date };
-    dataByTicker.forEach(({ ticker, rows }) => {
-      const dd = computeDrawdown(rows);
-      if (dd[i] !== undefined) obj[ticker] = dd[i];
-    });
-    return obj;
-  });
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Find max drawdown
+  const maxDrawdown = Math.min(...chartData.map(d => d.drawdown));
 
   return (
-    <div className="h-[400px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data.slice(-252)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 10 }} />
-          <YAxis stroke="#666" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} domain={["auto", 0]} />
-          <Tooltip
-            contentStyle={{ background: "#242424", border: "1px solid #333" }}
-            formatter={(v: number) => [v?.toFixed(2) + "%", "Drawdown"]}
-          />
-          <ReferenceLine y={0} stroke="#666" strokeDasharray="1 1" />
-          {tickers.map((t, i) => (
-            <Area
-              key={t}
-              type="monotone"
-              dataKey={t}
-              stroke={colors[i % 5]}
-              fill={colors[i % 5] + "33"}
-              strokeWidth={1.5}
-            />
-          ))}
-        </AreaChart>
-      </ResponsiveContainer>
-      <p className="text-xs text-bloomberg-muted mt-2">
-        Drawdown from peak • % below prior high
-      </p>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={[Math.floor(maxDrawdown * 1.1), 0]}
+          width={45}
+          tickFormatter={(v) => `${v.toFixed(0)}%`}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          formatter={(value: number) => [`${value.toFixed(2)}%`, 'Drawdown']}
+          labelFormatter={formatDate}
+        />
+        <ReferenceLine y={0} stroke="#888888" strokeWidth={1} />
+        <Area
+          type="monotone"
+          dataKey="drawdown"
+          stroke="#ff4444"
+          strokeWidth={1.5}
+          fill="#ff4444"
+          fillOpacity={0.3}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }

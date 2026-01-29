@@ -1,66 +1,78 @@
-"use client";
+'use client';
 
+import { StockData } from '@/types';
 import {
+  ResponsiveContainer,
   ComposedChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { PriceRow } from "@/types";
+  CartesianGrid,
+} from 'recharts';
 
-interface Props {
-  selectedTickers: string[];
-  tickerData: Record<string, PriceRow[]>;
-  compact?: boolean;
+interface PriceChartProps {
+  data: StockData[];
 }
 
-export function PriceChart({ selectedTickers, tickerData, compact }: Props) {
-  const ticker = selectedTickers[0];
-  if (!ticker) return null;
-
-  const rows = tickerData[ticker] ?? [];
-  const data = rows.map((r) => ({
-    date: r.date,
-    open: r.open,
-    high: r.high,
-    low: r.low,
-    close: r.close,
+export default function PriceChart({ data }: PriceChartProps) {
+  // Use full 1-year dataset (Jan 29, 2025 - Jan 29, 2026)
+  const chartData = data.map(d => ({
+    date: d.date,
+    close: d.close,
+    high: d.high,
+    low: d.low,
   }));
 
-  if (data.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center text-bloomberg-muted text-xs">
-        No data for {ticker}
-      </div>
-    );
-  }
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
-  const chartData = data.slice(-252);
+  const formatPrice = (value: number) => `$${value.toFixed(2)}`;
 
   return (
-    <div className={compact ? "h-full min-h-[180px]" : "h-[400px] w-full"}>
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="2 2" stroke="#333" />
-          <XAxis
-            dataKey="date"
-            stroke="#666"
-            tick={{ fontSize: compact ? 8 : 10 }}
-            tickFormatter={(v) => (v ? String(v).slice(5) : "")}
-          />
-          <YAxis stroke="#666" tick={{ fontSize: compact ? 8 : 10 }} domain={["auto", "auto"]} width={compact ? 36 : 50} />
-          <Tooltip
-            contentStyle={{ background: "#242424", border: "1px solid #333", fontSize: 11 }}
-            labelStyle={{ color: "#ffaa00" }}
-            formatter={(v: number) => [v?.toFixed(2), "Close"]}
-            labelFormatter={(v) => v}
-          />
-          <Line type="monotone" dataKey="close" stroke="#00aaff" strokeWidth={compact ? 1.5 : 2} dot={false} />
-        </ComposedChart>
-      </ResponsiveContainer>
-    </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <XAxis 
+          dataKey="date" 
+          tickFormatter={formatDate}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          tickFormatter={formatPrice}
+          tick={{ fill: '#888888', fontSize: 10 }}
+          axisLine={{ stroke: '#1a1a1a' }}
+          tickLine={{ stroke: '#1a1a1a' }}
+          domain={['auto', 'auto']}
+          width={60}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#09090b',
+            border: '1px solid #1a1a1a',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#ff9900' }}
+          itemStyle={{ color: '#00ff00' }}
+          formatter={(value: number) => [formatPrice(value), 'Price']}
+          labelFormatter={formatDate}
+        />
+        <Line
+          type="monotone"
+          dataKey="close"
+          stroke="#00ff00"
+          strokeWidth={1.5}
+          dot={false}
+          activeDot={{ r: 4, fill: '#00ff00' }}
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }

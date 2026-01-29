@@ -1,41 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-
-:root {
-  --bloomberg-black: #0d0d0d;
-  --bloomberg-dark: #1a1a1a;
-  --bloomberg-panel: #242424;
-  --bloomberg-border: #333333;
-  --bloomberg-green: #00ff88;
-  --bloomberg-red: #ff4444;
-  --bloomberg-amber: #ffaa00;
-  --bloomberg-blue: #00aaff;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
+html,
 body {
+  background-color: #000000;
+  color: #ffffff;
   font-family: 'JetBrains Mono', monospace;
-  background: var(--bloomberg-black);
-  color: #e0e0e0;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bloomberg-dark);
+  background: #09090b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--bloomberg-border);
-  border-radius: 3px;
+  background: #333333;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: #555555;
+}
+
+/* Chart container animations */
+.chart-panel {
+  transition: all 0.2s ease-in-out;
+}
+
+.chart-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255, 153, 0, 0.1);
+}
+
+/* Status indicator pulse */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-connected {
+  animation: pulse 2s infinite;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  border: 2px solid #09090b;
+  border-top: 2px solid #ff9900;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
