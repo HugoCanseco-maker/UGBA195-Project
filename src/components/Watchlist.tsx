@@ -13,7 +13,7 @@ export function Watchlist({ selectedTickers, onSelect, loading }: WatchlistProps
   return (
     <div className="flex-1 overflow-auto p-2">
       <p className="text-xs text-bloomberg-muted px-2 py-1">
-        Select 1–5 tickers • Click to toggle
+        Select one ticker • Click to toggle
       </p>
       {loading ? (
         <div className="p-4 text-bloomberg-muted text-sm">Loading...</div>

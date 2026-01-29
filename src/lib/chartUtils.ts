@@ -1,16 +1,16 @@
-import Papa from "papaparse";
+import * as Papa from "papaparse";
 import { PriceRow } from "@/types";
 
 const TRADING_DAYS = 252;
 
-/** Map ticker to filename (BRK-B -> BRK_B) */
+/** Map ticker to filename - case-sensitive for Vercel (AAPL.csv not Aapl.csv) */
 function tickerToFilename(ticker: string): string {
   return ticker.replace(/-/g, "_") + ".csv";
 }
 
 /**
- * Load ticker-specific CSV client-side from /data/AAPL.csv, etc.
- * Files must be in public/data/ (e.g., public/data/AAPL.csv).
+ * Load ticker-specific CSV client-side from public/data/.
+ * Uses window.location.origin for absolute URL (Vercel-friendly).
  * Returns last 252 trading days.
  */
 export async function getTickerData(ticker: string): Promise<PriceRow[]> {
@@ -18,10 +18,14 @@ export async function getTickerData(ticker: string): Promise<PriceRow[]> {
 
   try {
     const filename = tickerToFilename(ticker);
-    const res = await fetch(`/data/${filename}`);
+    const baseUrl =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${baseUrl}/data/${filename}`;
+
+    const res = await fetch(url);
 
     if (!res.ok) {
-      console.error(`Failed to fetch /data/${filename}`);
+      console.error(`Failed to fetch ${url}`);
       return [];
     }
 
@@ -30,7 +34,7 @@ export async function getTickerData(ticker: string): Promise<PriceRow[]> {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
-    });
+    }) as Papa.ParseResult<any>;
 
     const raw = (parsed.data ?? []) as Record<string, unknown>[];
     const rows: PriceRow[] = raw
