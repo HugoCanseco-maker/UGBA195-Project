@@ -1,8 +1,8 @@
 import { StockData } from '@/types';
 
-// Data range constants for the 1-year period
-export const DATA_START_DATE = '2025-01-29';
-export const DATA_END_DATE = '2026-01-29';
+// Data range constants for the 1-year period (Feb 6, 2025 - Feb 6, 2026)
+export const DATA_START_DATE = '2025-02-06';
+export const DATA_END_DATE = '2026-02-06';
 
 // Custom error class for data link failures
 export class DataLinkError extends Error {
@@ -48,10 +48,11 @@ export function parseYahooCSV(csvText: string): StockData[] {
     const low = parseFloat(values[lowIdx]);
     const close = parseFloat(values[closeIdx]);
     const adjClose = adjCloseIdx >= 0 ? parseFloat(values[adjCloseIdx]) : close;
-    const volume = parseInt(values[volumeIdx], 10);
+    const volumeRaw = values[volumeIdx];
+    const volume = volumeRaw ? parseInt(String(volumeRaw).replace(/\D/g, ''), 10) : 0;
 
-    // Skip invalid rows
-    if (!date || isNaN(close) || isNaN(volume)) {
+    // Skip invalid rows (only require date and close; allow volume=0 to prevent gaps)
+    if (!date || isNaN(close)) {
       continue;
     }
 

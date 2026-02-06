@@ -16,6 +16,7 @@ function Maximize2Icon({ className }: { className?: string }) {
 interface ChartPanelProps {
   title: string;
   description: string;
+  insight?: string;
   children: ReactNode;
   alertCondition?: boolean;
   alertText?: string;
@@ -25,6 +26,7 @@ interface ChartPanelProps {
 export default function ChartPanel({
   title,
   description,
+  insight,
   children,
   alertCondition = false,
   alertText,
@@ -53,6 +55,15 @@ export default function ChartPanel({
       <div className="p-4 h-64">
         {children}
       </div>
+
+      {/* Institutional Insight Bar */}
+      {insight && (
+        <div className="px-4 py-2 border-t border-bloomberg-dark-gray bg-bloomberg-black/50 border-l-2 border-l-bloomberg-orange">
+          <p className="text-xs leading-relaxed text-bloomberg-gray font-mono">
+            {insight}
+          </p>
+        </div>
+      )}
 
       {/* Footer Blurb */}
       <div className="px-4 py-3 border-t border-bloomberg-dark-gray bg-bloomberg-black/30">

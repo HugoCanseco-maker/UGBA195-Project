@@ -161,7 +161,7 @@ export default function Home() {
                 <div className="text-sm text-bloomberg-gray/70">
                   <div className="mb-1">• 49 major tickers available</div>
                   <div className="mb-1">• 15 professional-grade metrics</div>
-                  <div className="mb-1">• Data range: Jan 29, 2025 → Jan 29, 2026</div>
+                  <div className="mb-1">• Data range: Feb 6, 2025 → Feb 6, 2026</div>
                   <div>• Real-time calculations powered by client-side math engine</div>
                 </div>
               </div>

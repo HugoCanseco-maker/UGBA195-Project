@@ -92,7 +92,7 @@ export default function MovingAverageChart({ data, expanded = false }: MovingAve
           type="monotone"
           dataKey="ma200"
           stroke="#ff4444"
-          strokeWidth={1.5}
+          strokeWidth={2.5}
           dot={false}
           connectNulls={false}
         />

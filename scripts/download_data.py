@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Download historical stock data for 50 tickers using yfinance.
-Data range: January 29, 2025 to January 29, 2026
+Data range: February 6, 2025 to February 6, 2026
 Saves individual CSV files to ./public/data/
 """
 
@@ -20,8 +20,8 @@ TICKERS = [
 ]
 
 # Date range
-START_DATE = '2025-01-29'
-END_DATE = '2026-01-29'
+START_DATE = '2025-02-06'
+END_DATE = '2026-02-06'
 
 # Output directory (relative to project root)
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', 'data')

@@ -142,6 +142,7 @@ export default function ChartGrid({ stockData, spyData, selectedMetrics, ticker 
         <ChartPanel
           title={title}
           description={config.description}
+          insight={config.insight}
           alertCondition={isOverbought || isOversold}
           alertText={
             isOverbought
@@ -159,6 +160,7 @@ export default function ChartGrid({ stockData, spyData, selectedMetrics, ticker 
       <ChartPanel
         title={title}
         description={config.description}
+        insight={config.insight}
         onExpand={() => setExpandedMetricId(metricId)}
       >
         {renderChartContent(metricId, false)}

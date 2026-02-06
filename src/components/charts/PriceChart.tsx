@@ -32,9 +32,9 @@ function CandlestickLayer(props: CandlestickLayerProps) {
   const xScale = xAxis.scale;
   const yScale = yAxis.scale;
   const bw = (typeof xScale.bandwidth === 'function' ? xScale.bandwidth() : 0) as number;
-  const bandwidth = bw > 0 ? bw : 6;
-  const gap = Math.max(1, bandwidth * 0.15);
-  const bodyWidth = Math.max(2, bandwidth - gap);
+  const bandwidth = bw > 0 ? bw : 8;
+  const gap = Math.max(1, bandwidth * 0.1);
+  const bodyWidth = Math.max(3, bandwidth - gap);
 
   const candles = data.map((d, i) => {
     const xRaw = xScale(d.date) ?? xScale(i);
@@ -164,7 +164,8 @@ export default function PriceChart({ data, expanded = false }: PriceChartProps) 
         />
         <Tooltip
           content={renderTooltip}
-          cursor={expanded ? { stroke: '#ff9900', strokeWidth: 2 } : false}
+          cursor={{ stroke: '#ff9900', strokeWidth: 2 }}
+          isAnimationActive={false}
         />
         {/* Invisible lines so y-domain spans high/low and Tooltip receives OHLC */}
         <Line dataKey="high" stroke="transparent" strokeWidth={0} dot={false} isAnimationActive={false} />
